@@ -1,6 +1,7 @@
 package com.InsuranceProposerCrud.request;
 
 import java.util.Date;
+import java.util.List;
 
 import com.InsuranceProposerCrud.enumclasses.Gender;
 import com.InsuranceProposerCrud.enumclasses.ProposerTitle;
@@ -23,6 +24,8 @@ public class RequestDto {
 	private String city;
 	private String state;
 	
+	
+
 	public ProposerTitle getProposerTitle() {
 		return proposerTitle;
 	}

@@ -106,17 +106,18 @@ public class ProposerController {
 
 		ResponseHandler response = new ResponseHandler();
 		try {
-
-			String data = proposerService.updateProposer(proposerId, requestDto);
-			response.setData(data);
-			response.setStatus(true);
-			response.setMessage("success");
-
-		} catch (Exception e) {
-			response.setData(new ArrayList<>());
-			response.setStatus(false);
-			response.setMessage("failed");
+		    String result = proposerService.saveProposer(requestDto);
+		    response.setStatus(true);
+		    response.setMessage(result);
+		    response.setData(result);
+		} catch (IllegalArgumentException e) {
+		    response.setStatus(false);
+		    response.setMessage("Validation failed");
+		    response.setErrors(List.of(e.getMessage().split("; ")));  
+		    response.setData(List.of());
 		}
+
+		
 		return response;
 
 	}

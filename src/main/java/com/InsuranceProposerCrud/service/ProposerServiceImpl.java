@@ -137,31 +137,89 @@ public class ProposerServiceImpl implements ProposerService {
 
 	@Override
 	public String updateProposer(Integer proposerId, RequestDto requestDto) {
-		Optional<Proposer> opt = proposerRepo.findByProposerIdAndStatus(proposerId,"y");
-		if (opt.isPresent()) {
-			
-			Proposer existing =opt.get();
-			existing.setProposerTitle(requestDto.getProposerTitle());
-			existing.setGender(requestDto.getGender());
-			existing.setDateOfBirth(requestDto.getDateOfBirth());
-			existing.setPanNumber(requestDto.getPanNumber());
-			existing.setAadharNo(requestDto.getAadharNo());
-			existing.setEmail(requestDto.getEmail());
-			existing.setMobileNo(requestDto.getMobileNo());
-			existing.setAlternateMobNo(requestDto.getAlternateMobNo());
-			existing.setAddressLine1(requestDto.getAddressLine1());
-			existing.setAddressLine2(requestDto.getAddressLine2());
-			existing.setAddressLine3(requestDto.getAddressLine3());
-			existing.setPincode(requestDto.getPincode());
-			existing.setCity(requestDto.getCity());
-			existing.setState(requestDto.getState());
+	    Optional<Proposer> opt = proposerRepo.findByProposerIdAndStatus(proposerId, "y");
 
-			proposerRepo.save(existing);
-			return "Proposer updated successfully!!";
-		}
+	    if (opt.isPresent()) {
+	        Proposer existing = opt.get();
 
-		return "Proposer not found";
+	        List<String> errors = new ArrayList<>();
+
+	        // Validate required fields (if updating them)
+	        if (requestDto.getEmail() != null &&
+	                !requestDto.getEmail().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$"))
+	            errors.add("Invalid email format");
+
+	        if (requestDto.getPanNumber() != null &&
+	                !requestDto.getPanNumber().matches("^[A-Z]{5}[0-9]{4}[A-Z]$"))
+	            errors.add("Invalid PAN format");
+
+	        if (requestDto.getAadharNo() != null &&
+	                String.valueOf(requestDto.getAadharNo()).length() != 12)
+	            errors.add("Aadhar number must be 12 digits");
+
+	        if (requestDto.getMobileNo() != null &&
+	                String.valueOf(requestDto.getMobileNo()).length() != 10)
+	            errors.add("Mobile number must be 10 digits");
+
+	        if (requestDto.getPincode() != null &&
+	                String.valueOf(requestDto.getPincode()).length() != 6)
+	            errors.add("Pincode must be 6 digits");
+
+	        
+	        if (!errors.isEmpty()) {
+	            throw new IllegalArgumentException(String.join("; ", errors));
+	        }
+
+	        // Update only non-null fields
+	        if (requestDto.getProposerTitle() != null)
+	            existing.setProposerTitle(requestDto.getProposerTitle());
+
+	        if (requestDto.getGender() != null)
+	            existing.setGender(requestDto.getGender());
+
+	        if (requestDto.getDateOfBirth() != null)
+	            existing.setDateOfBirth(requestDto.getDateOfBirth());
+
+	        if (requestDto.getPanNumber() != null)
+	            existing.setPanNumber(requestDto.getPanNumber());
+
+	        if (requestDto.getAadharNo() != null)
+	            existing.setAadharNo(requestDto.getAadharNo());
+
+	        if (requestDto.getEmail() != null)
+	            existing.setEmail(requestDto.getEmail());
+
+	        if (requestDto.getMobileNo() != null)
+	            existing.setMobileNo(requestDto.getMobileNo());
+
+	        if (requestDto.getAlternateMobNo() != null)
+	            existing.setAlternateMobNo(requestDto.getAlternateMobNo());
+
+	        if (requestDto.getAddressLine1() != null)
+	            existing.setAddressLine1(requestDto.getAddressLine1());
+
+	        if (requestDto.getAddressLine2() != null)
+	            existing.setAddressLine2(requestDto.getAddressLine2());
+
+	        if (requestDto.getAddressLine3() != null)
+	            existing.setAddressLine3(requestDto.getAddressLine3());
+
+	        if (requestDto.getPincode() != null)
+	            existing.setPincode(requestDto.getPincode());
+
+	        if (requestDto.getCity() != null)
+	            existing.setCity(requestDto.getCity());
+
+	        if (requestDto.getState() != null)
+	            existing.setState(requestDto.getState());
+
+	        proposerRepo.save(existing);
+	        return "Proposer updated successfully!!";
+	    }
+
+	    return "Proposer not found";
 	}
+
 
 	@Override
 	public Optional<Proposer> findByEmail(String email) {
