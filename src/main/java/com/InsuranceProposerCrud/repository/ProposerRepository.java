@@ -13,5 +13,10 @@ public interface ProposerRepository extends JpaRepository<Proposer, Integer>{
 	public Optional<Proposer> findByEmail(String email);
 	
 	public Optional<Proposer> findByProposerIdAndStatus(Integer proposerId,String status);
+	
+
+	Optional<Proposer> findByPanNumber(String panNumber);
+	Optional<Proposer> findByAadharNo(Long aadharNo);
+
 }
 

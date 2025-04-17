@@ -9,7 +9,7 @@ public class ResponseHandler {
 	private String message;
 	private Object totalRecord;
 	
-	private List<String> errors;
+	private List<String> errors; //for listing errors
 	
 	public Object getData() {
 		return Data;
@@ -36,8 +36,6 @@ public class ResponseHandler {
 		this.totalRecord = totalRecord;
 	}
 	
-	
-
 	public List<String> getErrors() {
 		return errors;
 	}

@@ -51,7 +51,7 @@ public class ProposerController {
 
 	    return response;
 	}
-
+ 
 
 	@GetMapping("/allProposer")
 	public ResponseHandler allProposer() {
@@ -67,8 +67,6 @@ public class ProposerController {
 			response.setMessage("failed");
 		}
 		return response;
-		
-
 	}
 
 	@GetMapping("/allProposer/{proposerId}")
@@ -106,7 +104,7 @@ public class ProposerController {
 
 		ResponseHandler response = new ResponseHandler();
 		try {
-		    String result = proposerService.saveProposer(requestDto);
+		    String result = proposerService.updateProposer(proposerId, requestDto);
 		    response.setStatus(true);
 		    response.setMessage(result);
 		    response.setData(result);
