@@ -10,7 +10,7 @@ public interface ProposerService {
 	
 	public List<RequestDto> allProposer();
 	
-	public Optional<Proposer> proposerFindById(Integer proposerId);
+	public RequestDto proposerFindById(Integer proposerId);
 	
 	public String deleteProposer(Integer proposerId);
 	

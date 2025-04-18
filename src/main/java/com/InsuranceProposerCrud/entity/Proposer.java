@@ -1,6 +1,8 @@
 package com.InsuranceProposerCrud.entity;
 
 import java.util.Date;
+import java.util.List;
+
 import com.InsuranceProposerCrud.enumclasses.Gender;
 import com.InsuranceProposerCrud.enumclasses.ProposerTitle;
 
@@ -34,6 +36,7 @@ public class Proposer {
 	@Column(name="last_name")
 	private String lastName;
 	
+
 	public String getFirstName() {
 		return firstName;
 	}
@@ -57,6 +60,7 @@ public class Proposer {
 	public void setLastName(String lastName) {
 		this.lastName = lastName;
 	}
+	
 
 	@Enumerated(EnumType.STRING)
 	@Column(name="gender")
@@ -245,5 +249,7 @@ public class Proposer {
 	public void setState(String state) {
 		this.state = state;
 	}
+
+	
 
 }

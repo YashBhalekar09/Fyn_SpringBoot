@@ -39,11 +39,14 @@ public class ProposerController {
 	        response.setMessage("success");
 
 	    } catch (IllegalArgumentException e) {
+	    	e.printStackTrace();
 	        response.setData(new ArrayList<>());
 	        response.setStatus(false);
 	        response.setMessage("Validation failed: " + e.getMessage());
 
 	    } catch (Exception e) {
+	    	e.printStackTrace();
+
 	        response.setData(new ArrayList<>());
 	        response.setStatus(false);
 	        response.setMessage("Something went wrong: " + e.getMessage());
@@ -69,16 +72,12 @@ public class ProposerController {
 		return response;
 	}
 
-	@GetMapping("/allProposer/{proposerId}")
-	public ResponseEntity<Optional<Proposer>> proposerFindById(@PathVariable Integer proposerId) {
-		Optional<Proposer> prop = proposerService.proposerFindById(proposerId);
-		if (prop.isPresent()) {
-			return new ResponseEntity<Optional<Proposer>>(prop, HttpStatus.OK);
-		} else {
-			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-		}
-
+	@GetMapping("/allProposer/{id}")
+	public ResponseEntity<RequestDto> getProposerWithNominees(@PathVariable Integer id) {
+	    RequestDto dto = proposerService.proposerFindById(id);
+	    return ResponseEntity.ok(dto);
 	}
+
 
 	@DeleteMapping("/deleteProposer/{proposerId}")
 	public ResponseHandler deleteProposer(@PathVariable Integer proposerId) {

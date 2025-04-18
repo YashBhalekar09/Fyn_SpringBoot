@@ -17,6 +17,7 @@ public interface ProposerRepository extends JpaRepository<Proposer, Integer>{
 
 	Optional<Proposer> findByPanNumber(String panNumber);
 	Optional<Proposer> findByAadharNo(Long aadharNo);
+	Optional<Proposer> findByMobileNo(Long mobileNo);
 
 }
 
