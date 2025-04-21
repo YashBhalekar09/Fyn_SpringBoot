@@ -1,7 +1,7 @@
 package com.InsuranceProposerCrud.entity;
 
 import java.util.Date;
-import java.util.List;
+
 
 import com.InsuranceProposerCrud.enumclasses.Gender;
 import com.InsuranceProposerCrud.enumclasses.ProposerTitle;

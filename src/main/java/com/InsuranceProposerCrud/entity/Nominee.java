@@ -28,7 +28,6 @@ public class Nominee {
 
 	@Column(name = "nominee_gender")
 	private Gender nomineeGender;
-
 	
 	@Column(name = "nominee_dob")
 	private Date nomineeDOB;

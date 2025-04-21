@@ -6,8 +6,7 @@ import java.util.List;
 import com.InsuranceProposerCrud.enumclasses.Gender;
 import com.InsuranceProposerCrud.enumclasses.ProposerTitle;
 
-public class RequestDto {
-
+public class AddDto {
 	private ProposerTitle proposerTitle;
 	private Gender gender;
 	private Date dateOfBirth;
@@ -32,25 +31,9 @@ public class RequestDto {
 
 	private NomineeDto nomineeDetails;
 
-	private String doYouWantToAddNominee;
+	
 
-	private String doYouWantUpdateNominee;
-
-	public String getDoYouWantToAddNominee() {
-		return doYouWantToAddNominee;
-	}
-
-	public void setDoYouWantToAddNominee(String doYouWantToAddNominee) {
-		this.doYouWantToAddNominee = doYouWantToAddNominee;
-	}
-
-	public String getDoYouWantUpdateNominee() {
-		return doYouWantUpdateNominee;
-	}
-
-	public void setDoYouWantUpdateNominee(String doYouWantUpdateNominee) {
-		this.doYouWantUpdateNominee = doYouWantUpdateNominee;
-	}
+	
 
 	public NomineeDto getNomineeDetails() {
 		return nomineeDetails;

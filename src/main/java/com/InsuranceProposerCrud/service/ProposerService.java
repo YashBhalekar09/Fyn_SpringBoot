@@ -4,13 +4,14 @@ import java.util.List;
 import java.util.Optional;
 import com.InsuranceProposerCrud.entity.Proposer;
 import com.InsuranceProposerCrud.request.RequestDto;
+import com.InsuranceProposerCrud.request.ResponseDto;
 
 public interface ProposerService {
 
 	
 	public List<RequestDto> allProposer();
 	
-	public RequestDto proposerFindById(Integer proposerId);
+	public ResponseDto proposerFindById(Integer proposerId);
 	
 	public String deleteProposer(Integer proposerId);
 	

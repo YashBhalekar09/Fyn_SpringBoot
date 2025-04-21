@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.InsuranceProposerCrud.entity.Proposer;
 import com.InsuranceProposerCrud.request.RequestDto;
+import com.InsuranceProposerCrud.request.ResponseDto;
 import com.InsuranceProposerCrud.response.ResponseHandler;
 import com.InsuranceProposerCrud.service.ProposerService;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -73,9 +74,9 @@ public class ProposerController {
 	}
 
 	@GetMapping("/allProposer/{id}")
-	public ResponseEntity<RequestDto> getProposerWithNominees(@PathVariable Integer id) {
-	    RequestDto dto = proposerService.proposerFindById(id);
-	    return ResponseEntity.ok(dto);
+	public ResponseEntity<ResponseDto> getProposerWithNominees(@PathVariable Integer id) {
+	    ResponseDto proposerFindById = proposerService.proposerFindById(id);
+	    return ResponseEntity.ok(proposerFindById);
 	}
 
 

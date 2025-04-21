@@ -13,7 +13,11 @@ import com.InsuranceProposerCrud.entity.Nominee;
 
 @Repository
 public interface NomineeRepository extends JpaRepository<Nominee, Integer> {
+	
     List<Nominee> getByProposerId(Integer proposerId);
-    Optional<List<Nominee>> findByProposerId(Integer proposerId); // renamed to avoid clash
+    
+    Optional<Nominee> findByProposerId(Integer proposerId); // renamed to avoid clash
+
+	Optional<Nominee> findByProposerIdAndStatus(Integer proposerId, String status);
 }
 
