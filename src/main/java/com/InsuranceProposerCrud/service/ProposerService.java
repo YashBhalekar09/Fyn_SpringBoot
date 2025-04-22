@@ -1,6 +1,7 @@
 package com.InsuranceProposerCrud.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import com.InsuranceProposerCrud.entity.Proposer;
 import com.InsuranceProposerCrud.request.RequestDto;
@@ -9,7 +10,10 @@ import com.InsuranceProposerCrud.request.ResponseDto;
 public interface ProposerService {
 
 	
-	public List<RequestDto> allProposer();
+	//public List<RequestDto> allProposer();
+	
+	List<RequestDto> allProposer(int page, int size);
+
 	
 	public ResponseDto proposerFindById(Integer proposerId);
 	
@@ -22,4 +26,6 @@ public interface ProposerService {
 	public String saveProposer(RequestDto requestDto);
 
 	Optional<Proposer> proposerUpdateByIdAndStatus(Integer proposerId, String status);
+
+
 }

@@ -8,6 +8,9 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.InsuranceProposerCrud.entity.Nominee;
@@ -118,11 +121,13 @@ public class ProposerServiceImpl implements ProposerService {
 	}
 
 	@Override
-	public List<RequestDto> allProposer() {
-		List<Proposer> entityList = proposerRepo.findByStatus("y");
+	
+	public List<RequestDto> allProposer(int page,int size) {
+		 Pageable pageable = PageRequest.of(page, size);
+		    Page<Proposer> proposerPage = proposerRepo.findByStatus("y", pageable);
 		List<RequestDto> listDto = new ArrayList<>();
 
-		for (Proposer proposer : entityList) {
+		for (Proposer proposer : proposerPage.getContent()) {
 			RequestDto reqDto = new RequestDto();
 			reqDto.setProposerTitle(proposer.getProposerTitle());
 			reqDto.setFirstName(proposer.getFirstName());

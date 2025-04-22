@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.InsuranceProposerCrud.entity.Proposer;
@@ -58,13 +59,23 @@ public class ProposerController {
  
 
 	@GetMapping("/allProposer")
-	public ResponseHandler allProposer() {
+	public ResponseHandler allProposer(@RequestParam(defaultValue = "0") int page,
+	        @RequestParam(defaultValue = "5") int size) {
+		
 		ResponseHandler response = new ResponseHandler();
 		try {
-			List<RequestDto> reqDto = proposerService.allProposer();
+			
+			List<RequestDto> reqDto = proposerService.allProposer(page,size);
+			
+			int count=0;
+			for(int i=0;i<reqDto.size();i++) {
+				count++;
+			}
+			
 			response.setData(reqDto);
 			response.setStatus(true);
 			response.setMessage("success");
+			response.setTotalRecord(count);
 		} catch (Exception e) {
 			response.setData(new ArrayList<>());
 			response.setStatus(false);

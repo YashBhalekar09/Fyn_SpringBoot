@@ -37,6 +37,10 @@ public class Nominee {
 	
 	@Column(name="active_status")
 	private String status = "y"; // default to active
+	
+
+	@Column(name="proposer_id")
+	private Integer proposerId; // foreign key
 
 	public String getStatus() {
 		return status;
@@ -54,8 +58,6 @@ public class Nominee {
 		this.relationWithNominee = relationWithNominee;
 	}
 
-	@Column(name="proposer_id")
-	private Integer proposerId; // foreign key
 
 	public Integer getNomineeId() {
 		return nomineeId;
