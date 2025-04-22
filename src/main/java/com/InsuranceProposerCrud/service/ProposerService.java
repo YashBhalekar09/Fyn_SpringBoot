@@ -15,7 +15,7 @@ public interface ProposerService {
 	
 	//List<RequestDto> allProposer(int page, int size);
 
-	List<RequestDto> allProposer(ProposerPagination pagination);
+	List<Proposer> allProposer(ProposerPagination pagination);
 	
 	public ResponseDto proposerFindById(Integer proposerId);
 	

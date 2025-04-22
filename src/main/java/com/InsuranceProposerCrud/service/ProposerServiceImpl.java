@@ -127,77 +127,48 @@ public class ProposerServiceImpl implements ProposerService {
 	}
 
 	@Override
-	public List<RequestDto> allProposer(ProposerPagination pagination) {
-		
+	public List<Proposer> allProposer(ProposerPagination pagination) {
+
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-		
+
 		CriteriaQuery<Proposer> cq = cb.createQuery(Proposer.class);
-		
+
 		Root<Proposer> root = cq.from(Proposer.class);
 
+		cq.where(cb.equal(root.get("status"), "y"));
 
-		
 		String sortBy = pagination.getSortBy();
 		if (sortBy == null || sortBy.trim().isEmpty()) {
-		    sortBy = "id";
+			sortBy = "proposerId";
 		}
 
 		String sortOrder = pagination.getSortOrder();
 		if (sortOrder == null || sortOrder.trim().isEmpty()) {
-		    sortOrder = "asc";
+			sortOrder = "asc";
 		}
 
 		// Apply sorting to the query
 		if (sortOrder.equalsIgnoreCase("desc")) {
-		    cq.orderBy(cb.desc(root.get(sortBy)));
+			cq.orderBy(cb.desc(root.get(sortBy)));
 		} else {
-		    cq.orderBy(cb.asc(root.get(sortBy)));
+			cq.orderBy(cb.asc(root.get(sortBy)));
 		}
 
-		
 		int page = pagination.getPage();
-		if (page < 0) {
-		    page = 0;
-		}
-
 		int size = pagination.getSize();
-		if (size <= 0) {
-		    size = 5;
+
+		TypedQuery<Proposer> query = entityManager.createQuery(cq);
+
+		if (page == 0 && size == 0) {
+			return query.getResultList();
 		}
 
-		// Create the query and set pagination
-		TypedQuery<Proposer> query = entityManager.createQuery(cq);
 		query.setFirstResult(page * size); // start from this record
-		query.setMaxResults(size);         // max records to return
+		query.setMaxResults(size); // max records to return
 
 		List<Proposer> proposerList = query.getResultList();
 
-		
-		List<RequestDto> dtoList = new ArrayList<>();
-		for (Proposer proposer : proposerList) {
-			RequestDto dto = new RequestDto();
-			dto.setProposerTitle(proposer.getProposerTitle());
-			dto.setFirstName(proposer.getFirstName());
-			dto.setMiddleName(proposer.getMiddleName());
-			dto.setLastName(proposer.getLastName());
-			dto.setGender(proposer.getGender());
-			dto.setDateOfBirth(proposer.getDateOfBirth());
-			dto.setPanNumber(proposer.getPanNumber());
-			dto.setAadharNo(proposer.getAadharNo());
-			dto.setEmail(proposer.getEmail());
-			dto.setMobileNo(proposer.getMobileNo());
-			dto.setAlternateMobNo(proposer.getAlternateMobNo());
-			dto.setAddressLine1(proposer.getAddressLine1());
-			dto.setAddressLine2(proposer.getAddressLine2());
-			dto.setAddressLine3(proposer.getAddressLine3());
-			dto.setPincode(proposer.getPincode());
-			dto.setCity(proposer.getCity());
-			dto.setState(proposer.getState());
-			dto.setStatus(proposer.getStatus());
-			dtoList.add(dto);
-		}
-
-		return dtoList;
+		return proposerList;
 	}
 
 	@Override
@@ -438,7 +409,5 @@ public class ProposerServiceImpl implements ProposerService {
 	public Optional<Proposer> proposerUpdateByIdAndStatus(Integer proposerId, String status) {
 		return Optional.empty();
 	}
-
-	
 
 }

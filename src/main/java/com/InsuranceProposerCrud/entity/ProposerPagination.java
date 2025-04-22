@@ -2,10 +2,29 @@ package com.InsuranceProposerCrud.entity;
 
 public class ProposerPagination {
 	
-	private int page = 0;
-	private int size = 5;
-	private String sortBy = "id";
-	private String sortOrder = "asc";
+	private Integer page;
+	private Integer size;
+	private String sortBy;
+	private String sortOrder;
+	
+	
+
+	public ProposerPagination(Integer page, Integer size, String sortBy, String sortOrder) {
+		super();
+		this.page = page;
+		this.size = size;
+		this.sortBy = sortBy;
+		this.sortOrder = sortOrder;
+	}
+	
+	
+
+	public ProposerPagination() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+
+
 
 	public int getPage() {
 		return page;

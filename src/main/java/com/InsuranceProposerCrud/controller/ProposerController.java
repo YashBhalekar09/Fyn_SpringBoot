@@ -63,7 +63,7 @@ public class ProposerController {
 	public ResponseHandler allProposer(@RequestBody ProposerPagination pagination) {
 	    ResponseHandler response = new ResponseHandler();
 	    try {
-	        List<RequestDto> reqDto = proposerService.allProposer(pagination);
+	        List<Proposer> reqDto = proposerService.allProposer(pagination);
 
 	        response.setData(reqDto);
 	        response.setStatus(true);
