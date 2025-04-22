@@ -37,31 +37,6 @@ public class Proposer {
 	private String lastName;
 	
 
-	public String getFirstName() {
-		return firstName;
-	}
-
-	public void setFirstName(String firstName) {
-		this.firstName = firstName;
-	}
-
-	public String getMiddleName() {
-		return middleName;
-	}
-
-	public void setMiddleName(String middleName) {
-		this.middleName = middleName;
-	}
-
-	public String getLastName() {
-		return lastName;
-	}
-
-	public void setLastName(String lastName) {
-		this.lastName = lastName;
-	}
-	
-
 	@Enumerated(EnumType.STRING)
 	@Column(name="gender")
 	private Gender gender;
@@ -95,6 +70,33 @@ public class Proposer {
 	private String city;
 	@Column(name="state")
 	private String state;
+	
+
+	public String getFirstName() {
+		return firstName;
+	}
+
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
+
+	public String getMiddleName() {
+		return middleName;
+	}
+
+	public void setMiddleName(String middleName) {
+		this.middleName = middleName;
+	}
+
+	public String getLastName() {
+		return lastName;
+	}
+
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
+	}
+	
+
 
 	public Proposer(Integer proposerId, ProposerTitle proposerTitle, Gender gender, Date dateOfBirth, String panNumber,
 			Long aadharNo, String status, String email, Long mobileNo, Long alternateMobNo, String addressLine1,

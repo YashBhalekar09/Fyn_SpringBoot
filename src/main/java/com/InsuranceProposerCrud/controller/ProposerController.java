@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.InsuranceProposerCrud.entity.Proposer;
+import com.InsuranceProposerCrud.entity.ProposerPagination;
 import com.InsuranceProposerCrud.request.RequestDto;
 import com.InsuranceProposerCrud.request.ResponseDto;
 import com.InsuranceProposerCrud.response.ResponseHandler;
@@ -51,38 +52,33 @@ public class ProposerController {
 
 	        response.setData(new ArrayList<>());
 	        response.setStatus(false);
-	        response.setMessage("Something went wrong: " + e.getMessage());
+	        response.setMessage(e.getMessage());
 	    }
 
 	    return response;
 	}
  
 
-	@GetMapping("/allProposer")
-	public ResponseHandler allProposer(@RequestParam(defaultValue = "0") int page,
-	        @RequestParam(defaultValue = "5") int size) {
-		
-		ResponseHandler response = new ResponseHandler();
-		try {
-			
-			List<RequestDto> reqDto = proposerService.allProposer(page,size);
-			
-			int count=0;
-			for(int i=0;i<reqDto.size();i++) {
-				count++;
-			}
-			
-			response.setData(reqDto);
-			response.setStatus(true);
-			response.setMessage("success");
-			response.setTotalRecord(count);
-		} catch (Exception e) {
-			response.setData(new ArrayList<>());
-			response.setStatus(false);
-			response.setMessage("failed");
-		}
-		return response;
+	@PostMapping("/allProposer")
+	public ResponseHandler allProposer(@RequestBody ProposerPagination pagination) {
+	    ResponseHandler response = new ResponseHandler();
+	    try {
+	        List<RequestDto> reqDto = proposerService.allProposer(pagination);
+
+	        response.setData(reqDto);
+	        response.setStatus(true);
+	        response.setMessage("Success");
+	        response.setTotalRecord(reqDto.size());
+	    } catch (Exception e) {
+	        e.printStackTrace(); 
+	        response.setData(new ArrayList<>());
+	        response.setStatus(false);
+	        response.setMessage("Failed to fetch proposers");
+	        response.setTotalRecord(0);
+	    }
+	    return response;
 	}
+
 
 	@GetMapping("/allProposer/{id}")
 	public ResponseEntity<ResponseDto> getProposerWithNominees(@PathVariable Integer id) {

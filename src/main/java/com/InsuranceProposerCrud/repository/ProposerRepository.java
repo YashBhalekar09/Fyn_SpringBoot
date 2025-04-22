@@ -14,7 +14,6 @@ public interface ProposerRepository extends JpaRepository<Proposer, Integer>{
 	
 	Page<Proposer> findByStatus(String status, Pageable pageable);
 
-	
 	public Optional<Proposer> findByEmail(String email);
 	
 	public Optional<Proposer> findByProposerIdAndStatus(Integer proposerId,String status);

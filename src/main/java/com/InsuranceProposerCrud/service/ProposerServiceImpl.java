@@ -1,25 +1,28 @@
 package com.InsuranceProposerCrud.service;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.InsuranceProposerCrud.entity.Nominee;
 import com.InsuranceProposerCrud.entity.Proposer;
+import com.InsuranceProposerCrud.entity.ProposerPagination;
 import com.InsuranceProposerCrud.repository.NomineeRepository;
 import com.InsuranceProposerCrud.repository.ProposerRepository;
 import com.InsuranceProposerCrud.request.NomineeDto;
 import com.InsuranceProposerCrud.request.RequestDto;
 import com.InsuranceProposerCrud.request.ResponseDto;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 
 @Service
 public class ProposerServiceImpl implements ProposerService {
@@ -29,6 +32,9 @@ public class ProposerServiceImpl implements ProposerService {
 
 	@Autowired
 	private NomineeRepository nomineeRepo;
+
+	@Autowired
+	private EntityManager entityManager;
 
 	@Override
 	public String saveProposer(RequestDto requestDto) {
@@ -121,37 +127,77 @@ public class ProposerServiceImpl implements ProposerService {
 	}
 
 	@Override
-	
-	public List<RequestDto> allProposer(int page,int size) {
-		 Pageable pageable = PageRequest.of(page, size);
-		    Page<Proposer> proposerPage = proposerRepo.findByStatus("y", pageable);
-		List<RequestDto> listDto = new ArrayList<>();
+	public List<RequestDto> allProposer(ProposerPagination pagination) {
+		
+		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+		
+		CriteriaQuery<Proposer> cq = cb.createQuery(Proposer.class);
+		
+		Root<Proposer> root = cq.from(Proposer.class);
 
-		for (Proposer proposer : proposerPage.getContent()) {
-			RequestDto reqDto = new RequestDto();
-			reqDto.setProposerTitle(proposer.getProposerTitle());
-			reqDto.setFirstName(proposer.getFirstName());
-			reqDto.setMiddleName(proposer.getMiddleName());
-			reqDto.setLastName(proposer.getLastName());
-			reqDto.setGender(proposer.getGender());
-			reqDto.setDateOfBirth(proposer.getDateOfBirth());
-			reqDto.setPanNumber(proposer.getPanNumber());
-			reqDto.setAadharNo(proposer.getAadharNo());
-			reqDto.setEmail(proposer.getEmail());
-			reqDto.setMobileNo(proposer.getMobileNo());
-			reqDto.setAlternateMobNo(proposer.getAlternateMobNo());
-			reqDto.setAddressLine1(proposer.getAddressLine1());
-			reqDto.setAddressLine2(proposer.getAddressLine2());
-			reqDto.setAddressLine3(proposer.getAddressLine3());
-			reqDto.setPincode(proposer.getPincode());
-			reqDto.setCity(proposer.getCity());
-			reqDto.setState(proposer.getState());
-			reqDto.setStatus(proposer.getStatus());
 
-			listDto.add(reqDto);
+		
+		String sortBy = pagination.getSortBy();
+		if (sortBy == null || sortBy.trim().isEmpty()) {
+		    sortBy = "id";
 		}
 
-		return listDto;
+		String sortOrder = pagination.getSortOrder();
+		if (sortOrder == null || sortOrder.trim().isEmpty()) {
+		    sortOrder = "asc";
+		}
+
+		// Apply sorting to the query
+		if (sortOrder.equalsIgnoreCase("desc")) {
+		    cq.orderBy(cb.desc(root.get(sortBy)));
+		} else {
+		    cq.orderBy(cb.asc(root.get(sortBy)));
+		}
+
+		
+		int page = pagination.getPage();
+		if (page < 0) {
+		    page = 0;
+		}
+
+		int size = pagination.getSize();
+		if (size <= 0) {
+		    size = 5;
+		}
+
+		// Create the query and set pagination
+		TypedQuery<Proposer> query = entityManager.createQuery(cq);
+		query.setFirstResult(page * size); // start from this record
+		query.setMaxResults(size);         // max records to return
+
+		List<Proposer> proposerList = query.getResultList();
+
+		
+		List<RequestDto> dtoList = new ArrayList<>();
+		for (Proposer proposer : proposerList) {
+			RequestDto dto = new RequestDto();
+			dto.setProposerTitle(proposer.getProposerTitle());
+			dto.setFirstName(proposer.getFirstName());
+			dto.setMiddleName(proposer.getMiddleName());
+			dto.setLastName(proposer.getLastName());
+			dto.setGender(proposer.getGender());
+			dto.setDateOfBirth(proposer.getDateOfBirth());
+			dto.setPanNumber(proposer.getPanNumber());
+			dto.setAadharNo(proposer.getAadharNo());
+			dto.setEmail(proposer.getEmail());
+			dto.setMobileNo(proposer.getMobileNo());
+			dto.setAlternateMobNo(proposer.getAlternateMobNo());
+			dto.setAddressLine1(proposer.getAddressLine1());
+			dto.setAddressLine2(proposer.getAddressLine2());
+			dto.setAddressLine3(proposer.getAddressLine3());
+			dto.setPincode(proposer.getPincode());
+			dto.setCity(proposer.getCity());
+			dto.setState(proposer.getState());
+			dto.setStatus(proposer.getStatus());
+			dtoList.add(dto);
+		}
+
+		return dtoList;
 	}
 
 	@Override
@@ -342,7 +388,7 @@ public class ProposerServiceImpl implements ProposerService {
 						Nominee Existingnominiee = optional.get();
 
 						// Existingnominiee.setAddress(nomineeDto.getnAddress());
-					 	Existingnominiee.setNomineeDOB(nomineeDto.getNomineeDOB());
+						Existingnominiee.setNomineeDOB(nomineeDto.getNomineeDOB());
 						Existingnominiee.setNomineeGender(nomineeDto.getNomineeGender());
 						// Existingnominiee.setMobileNo(nomineeDto.getMobileNo());
 						Existingnominiee.setNomineeFirstName(nomineeDto.getNomineeFirstName());
@@ -392,5 +438,7 @@ public class ProposerServiceImpl implements ProposerService {
 	public Optional<Proposer> proposerUpdateByIdAndStatus(Integer proposerId, String status) {
 		return Optional.empty();
 	}
+
+	
 
 }
