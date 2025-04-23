@@ -1,13 +1,31 @@
 package com.InsuranceProposerCrud.entity;
 
+import java.util.List;
+
 public class ProposerPagination {
-	
+
 	private Integer page;
 	private Integer size;
 	private String sortBy;
 	private String sortOrder;
 	
-	
+	private List<ProposerSearchFilter> searchFilters;
+
+	public List<ProposerSearchFilter> getSearchFilters() {
+		return searchFilters;
+	}
+
+	public void setSearchFilters(List<ProposerSearchFilter> searchFilters) {
+		this.searchFilters = searchFilters;
+	}
+
+	public void setPage(Integer page) {
+		this.page = page;
+	}
+
+	public void setSize(Integer size) {
+		this.size = size;
+	}
 
 	public ProposerPagination(Integer page, Integer size, String sortBy, String sortOrder) {
 		super();
@@ -17,14 +35,19 @@ public class ProposerPagination {
 		this.sortOrder = sortOrder;
 	}
 	
-	
+	public ProposerPagination(Integer page, Integer size, String sortBy, String sortOrder,
+			List<ProposerSearchFilter> filters) {
+		super();
+		this.page = page;
+		this.size = size;
+		this.sortBy = sortBy;
+		this.sortOrder = sortOrder;
+		
+	}
 
 	public ProposerPagination() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
-
-
 
 	public int getPage() {
 		return page;

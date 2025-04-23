@@ -63,18 +63,39 @@ public class ProposerController {
 	public ResponseHandler allProposer(@RequestBody ProposerPagination pagination) {
 	    ResponseHandler response = new ResponseHandler();
 	    try {
-	        List<Proposer> reqDto = proposerService.allProposer(pagination);
+	        List<Proposer> proposer = proposerService.allProposer(pagination);
 
-	        response.setData(reqDto);
+	        response.setData(proposer);
 	        response.setStatus(true);
 	        response.setMessage("Success");
-	        response.setTotalRecord(reqDto.size());
+	        response.setTotalRecord(proposer.size());
 	    } catch (Exception e) {
 	        e.printStackTrace(); 
 	        response.setData(new ArrayList<>());
 	        response.setStatus(false);
 	        response.setMessage("Failed to fetch proposers");
 	        response.setTotalRecord(0);
+	    }
+	    return response;
+	}
+	
+	
+	@GetMapping("/listAllProposers")
+	public ResponseHandler proposers() {
+	    ResponseHandler response = new ResponseHandler();
+	    try {
+	        List<RequestDto> reqDto = proposerService.listAllProposers();
+
+	        response.setData(reqDto);
+	        response.setStatus(true);
+	        response.setMessage("Success");
+	       
+	    } catch (Exception e) {
+	        e.printStackTrace(); 
+	        response.setData(new ArrayList<>());
+	        response.setStatus(false);
+	        response.setMessage("Failed to fetch proposers");
+	      
 	    }
 	    return response;
 	}

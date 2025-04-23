@@ -1,5 +1,6 @@
 package com.InsuranceProposerCrud.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -10,9 +11,9 @@ import com.InsuranceProposerCrud.entity.Proposer;
 
 
 public interface ProposerRepository extends JpaRepository<Proposer, Integer>{
-	//public List<Proposer> findByStatus(String status);
+	public List<Proposer> findByStatus(String status);
 	
-	Page<Proposer> findByStatus(String status, Pageable pageable);
+	//Page<Proposer> findByStatus(String status, Pageable pageable);
 
 	public Optional<Proposer> findByEmail(String email);
 	

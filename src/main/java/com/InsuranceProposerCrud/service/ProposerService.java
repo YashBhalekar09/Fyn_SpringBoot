@@ -29,6 +29,8 @@ public interface ProposerService {
 
 	Optional<Proposer> proposerUpdateByIdAndStatus(Integer proposerId, String status);
 
+	public List<RequestDto> listAllProposers();
+
 
 
 

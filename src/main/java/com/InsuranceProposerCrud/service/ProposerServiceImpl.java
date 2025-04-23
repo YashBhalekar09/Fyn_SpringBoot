@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.InsuranceProposerCrud.entity.Nominee;
 import com.InsuranceProposerCrud.entity.Proposer;
 import com.InsuranceProposerCrud.entity.ProposerPagination;
+import com.InsuranceProposerCrud.entity.ProposerSearchFilter;
 import com.InsuranceProposerCrud.repository.NomineeRepository;
 import com.InsuranceProposerCrud.repository.ProposerRepository;
 import com.InsuranceProposerCrud.request.NomineeDto;
@@ -127,6 +128,39 @@ public class ProposerServiceImpl implements ProposerService {
 	}
 
 	@Override
+	public List<RequestDto> listAllProposers() {
+		List<Proposer> entityList = proposerRepo.findByStatus("y");
+
+		List<RequestDto> listDto = new ArrayList<>();
+
+		for (Proposer proposer : entityList) {
+			RequestDto reqDto = new RequestDto();
+			reqDto.setProposerTitle(proposer.getProposerTitle());
+			reqDto.setFirstName(proposer.getFirstName());
+			reqDto.setMiddleName(proposer.getMiddleName());
+			reqDto.setLastName(proposer.getLastName());
+			reqDto.setGender(proposer.getGender());
+			reqDto.setDateOfBirth(proposer.getDateOfBirth());
+			reqDto.setPanNumber(proposer.getPanNumber());
+			reqDto.setAadharNo(proposer.getAadharNo());
+			reqDto.setEmail(proposer.getEmail());
+			reqDto.setMobileNo(proposer.getMobileNo());
+			reqDto.setAlternateMobNo(proposer.getAlternateMobNo());
+			reqDto.setAddressLine1(proposer.getAddressLine1());
+			reqDto.setAddressLine2(proposer.getAddressLine2());
+			reqDto.setAddressLine3(proposer.getAddressLine3());
+			reqDto.setPincode(proposer.getPincode());
+			reqDto.setCity(proposer.getCity());
+			reqDto.setState(proposer.getState());
+			reqDto.setStatus(proposer.getStatus());
+
+			listDto.add(reqDto);
+		}
+
+		return listDto;
+	}
+
+	@Override
 	public List<Proposer> allProposer(ProposerPagination pagination) {
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -135,7 +169,39 @@ public class ProposerServiceImpl implements ProposerService {
 
 		Root<Proposer> root = cq.from(Proposer.class);
 
-		cq.where(cb.equal(root.get("status"), "y"));
+		// cq.where(cb.equal(root.get("status"), "y"));
+
+		List<Predicate> predicates = new ArrayList<>();
+
+//		if (pagination.getFilters() == null || pagination.getFilters().isEmpty()) {
+//		    predicates.add(cb.equal(cb.lower(root.get("status")), "y"));
+//		}
+
+		if (pagination.getSearchFilters() != null) {
+			for (ProposerSearchFilter filter : pagination.getSearchFilters()) {
+
+				if (filter.getFirstName() != null && !filter.getFirstName().isEmpty()) {
+					predicates.add(cb.like(cb.lower(root.get("firstName")), "%" + filter.getFirstName().toLowerCase() + "%"));
+				}
+
+				if (filter.getLastName() != null && !filter.getLastName().isEmpty()) {
+					predicates.add(cb.like(cb.lower(root.get("lastName")), "%" + filter.getLastName().toLowerCase() + "%"));
+				}
+
+				if (filter.getEmail() != null && !filter.getEmail().isEmpty()) {
+					predicates.add(cb.like(cb.lower(root.get("email")), "%" + filter.getEmail().toLowerCase() + "%"));
+				}
+
+				if (filter.getStatus() != null && !filter.getStatus().isEmpty()) {
+					predicates.add(cb.like(cb.lower(root.get("status")), "%" + filter.getStatus().toLowerCase() + "%"));
+				} else {
+					predicates.add(cb.equal(cb.lower(root.get("status")), "y"));
+				}
+
+			}
+		}
+
+		cq.where(cb.and(predicates.toArray(new Predicate[0])));
 
 		String sortBy = pagination.getSortBy();
 		if (sortBy == null || sortBy.trim().isEmpty()) {
@@ -144,10 +210,9 @@ public class ProposerServiceImpl implements ProposerService {
 
 		String sortOrder = pagination.getSortOrder();
 		if (sortOrder == null || sortOrder.trim().isEmpty()) {
-			sortOrder = "asc";
+			sortOrder = "desc";
 		}
 
-		// Apply sorting to the query
 		if (sortOrder.equalsIgnoreCase("desc")) {
 			cq.orderBy(cb.desc(root.get(sortBy)));
 		} else {
@@ -163,8 +228,8 @@ public class ProposerServiceImpl implements ProposerService {
 			return query.getResultList();
 		}
 
-		query.setFirstResult(page * size); // start from this record
-		query.setMaxResults(size); // max records to return
+		query.setFirstResult(page * size);
+		query.setMaxResults(size);
 
 		List<Proposer> proposerList = query.getResultList();
 
