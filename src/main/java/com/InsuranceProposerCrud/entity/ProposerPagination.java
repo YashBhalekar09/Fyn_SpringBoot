@@ -9,13 +9,13 @@ public class ProposerPagination {
 	private String sortBy;
 	private String sortOrder;
 	
-	private List<ProposerSearchFilter> searchFilters;
+	private ProposerSearchFilter searchFilters;
 
-	public List<ProposerSearchFilter> getSearchFilters() {
+	public ProposerSearchFilter getSearchFilters() {
 		return searchFilters;
 	}
 
-	public void setSearchFilters(List<ProposerSearchFilter> searchFilters) {
+	public void setSearchFilters(ProposerSearchFilter searchFilters) {
 		this.searchFilters = searchFilters;
 	}
 

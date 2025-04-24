@@ -19,6 +19,7 @@ import com.InsuranceProposerCrud.request.RequestDto;
 import com.InsuranceProposerCrud.request.ResponseDto;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -162,6 +163,11 @@ public class ProposerServiceImpl implements ProposerService {
 
 	@Override
 	public List<Proposer> allProposer(ProposerPagination pagination) {
+//		List<ProposerSearchFilter> searchFilters = pagination.getSearchFilters();
+//		String email;
+//		for (ProposerSearchFilter proposerSearchFilter : searchFilters) {
+//			 email = proposerSearchFilter.getEmail();
+//		}
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
@@ -176,28 +182,34 @@ public class ProposerServiceImpl implements ProposerService {
 //		if (pagination.getFilters() == null || pagination.getFilters().isEmpty()) {
 //		    predicates.add(cb.equal(cb.lower(root.get("status")), "y"));
 //		}
+		ProposerSearchFilter filter = pagination.getSearchFilters();
 
 		if (pagination.getSearchFilters() != null) {
-			for (ProposerSearchFilter filter : pagination.getSearchFilters()) {
 
-				if (filter.getFirstName() != null && !filter.getFirstName().isEmpty()) {
-					predicates.add(cb.like(cb.lower(root.get("firstName")), "%" + filter.getFirstName().toLowerCase() + "%"));
+			if (filter.getFirstName() != null && !filter.getFirstName().isEmpty()) {
+				predicates
+						.add(cb.like(cb.lower(root.get("firstName")), "%" + filter.getFirstName().toLowerCase() + "%"));
+			}
+
+			if (filter.getLastName() != null && !filter.getLastName().isEmpty()) {
+				predicates.add(cb.like(cb.lower(root.get("lastName")), "%" + filter.getLastName().toLowerCase() + "%"));
+			}
+
+			if (filter.getEmail() != null && !filter.getEmail().isEmpty()) {
+				if (!filter.getEmail().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+					throw new IllegalArgumentException("Invalid email format.");
 				}
 
-				if (filter.getLastName() != null && !filter.getLastName().isEmpty()) {
-					predicates.add(cb.like(cb.lower(root.get("lastName")), "%" + filter.getLastName().toLowerCase() + "%"));
-				}
+				predicates.add(cb.like(cb.lower(root.get("email")), "%" + filter.getEmail().toLowerCase() + "%"));
+			}
 
-				if (filter.getEmail() != null && !filter.getEmail().isEmpty()) {
-					predicates.add(cb.like(cb.lower(root.get("email")), "%" + filter.getEmail().toLowerCase() + "%"));
+			if (filter.getStatus() != null && !filter.getStatus().isEmpty()) {
+				if (!filter.getStatus().equalsIgnoreCase("y") && !filter.getStatus().equalsIgnoreCase("n")) {
+					throw new IllegalArgumentException("Invalid status value. Allowed only 'y' or 'n'");
 				}
-
-				if (filter.getStatus() != null && !filter.getStatus().isEmpty()) {
-					predicates.add(cb.like(cb.lower(root.get("status")), "%" + filter.getStatus().toLowerCase() + "%"));
-				} else {
-					predicates.add(cb.equal(cb.lower(root.get("status")), "y"));
-				}
-
+				predicates.add(cb.equal(cb.lower(root.get("status")), filter.getStatus().toLowerCase()));
+			} else {
+				predicates.add(cb.equal(cb.lower(root.get("status")), "y"));
 			}
 		}
 
@@ -219,21 +231,20 @@ public class ProposerServiceImpl implements ProposerService {
 			cq.orderBy(cb.asc(root.get(sortBy)));
 		}
 
+		TypedQuery<Proposer> query = entityManager.createQuery(cq);
+
 		int page = pagination.getPage();
 		int size = pagination.getSize();
 
-		TypedQuery<Proposer> query = entityManager.createQuery(cq);
-
 		if (page == 0 && size == 0) {
 			return query.getResultList();
+		} else if (page <= 0 || size <= 0) {
+			throw new IllegalArgumentException("Page number and size must be greater than 0.");
+		} else {
+			query.setFirstResult((page - 1) * size);
+			query.setMaxResults(size);
+			return query.getResultList();
 		}
-
-		query.setFirstResult(page * size);
-		query.setMaxResults(size);
-
-		List<Proposer> proposerList = query.getResultList();
-
-		return proposerList;
 	}
 
 	@Override
@@ -273,6 +284,8 @@ public class ProposerServiceImpl implements ProposerService {
 				nomDto.setNomineeGender(nomEntity.getNomineeGender());
 				nomDto.setRelationWithNominee(nomEntity.getRelationWithNominee());
 				nomDto.setNomineeDOB(nomEntity.getNomineeDOB());
+				nomDto.setNomineeId(nomEntity.getNomineeId());
+				nomDto.setIsUpdate(false);
 				nomDto.setProposerId(proposerId);
 
 				nomineeDtoList.add(nomDto);

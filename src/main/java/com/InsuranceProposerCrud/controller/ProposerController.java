@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.InsuranceProposerCrud.entity.Proposer;
 import com.InsuranceProposerCrud.entity.ProposerPagination;
+import com.InsuranceProposerCrud.entity.ProposerSearchFilter;
 import com.InsuranceProposerCrud.request.RequestDto;
 import com.InsuranceProposerCrud.request.ResponseDto;
 import com.InsuranceProposerCrud.response.ResponseHandler;
@@ -33,84 +34,115 @@ public class ProposerController {
 
 	@PostMapping("/saveProposer")
 	public ResponseHandler saveProposer(@RequestBody RequestDto requestDto) {
-	    ResponseHandler response = new ResponseHandler();
+		ResponseHandler response = new ResponseHandler();
 
-	    try {
-	        String savedProposer = proposerService.saveProposer(requestDto);
-	        response.setData(savedProposer);
-	        response.setStatus(true);
-	        response.setMessage("success");
+		try {
+			String savedProposer = proposerService.saveProposer(requestDto);
 
-	    } catch (IllegalArgumentException e) {
-	    	e.printStackTrace();
-	        response.setData(new ArrayList<>());
-	        response.setStatus(false);
-	        response.setMessage("Validation failed: " + e.getMessage());
+			response.setData(savedProposer);
+			response.setStatus(true);
+			response.setMessage("success");
 
-	    } catch (Exception e) {
-	    	e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+			response.setData(new ArrayList<>());
+			response.setStatus(false);
+			response.setMessage("Validation failed: " + e.getMessage());
 
-	        response.setData(new ArrayList<>());
-	        response.setStatus(false);
-	        response.setMessage(e.getMessage());
-	    }
+		} catch (Exception e) {
+			e.printStackTrace();
 
-	    return response;
+			response.setData(new ArrayList<>());
+			response.setStatus(false);
+			response.setMessage(e.getMessage());
+		}
+
+		return response;
 	}
- 
 
 	@PostMapping("/allProposer")
 	public ResponseHandler allProposer(@RequestBody ProposerPagination pagination) {
-	    ResponseHandler response = new ResponseHandler();
-	    try {
-	        List<Proposer> proposer = proposerService.allProposer(pagination);
+		ResponseHandler response = new ResponseHandler();
 
-	        response.setData(proposer);
-	        response.setStatus(true);
-	        response.setMessage("Success");
-	        response.setTotalRecord(proposer.size());
-	    } catch (Exception e) {
-	        e.printStackTrace(); 
-	        response.setData(new ArrayList<>());
-	        response.setStatus(false);
-	        response.setMessage("Failed to fetch proposers");
-	        response.setTotalRecord(0);
-	    }
-	    return response;
+		List<RequestDto> getAllCount = proposerService.listAllProposers();
+		int count = getAllCount.size();
+
+		try {
+			List<Proposer> allProposer = proposerService.allProposer(pagination);
+
+			response.setData(allProposer);
+			response.setStatus(true);
+			response.setMessage("Success");
+
+			if (pagination.getSearchFilters() != null) {
+				response.setTotalRecord(allProposer.size());
+			} else {
+				response.setTotalRecord(count);
+			}
+
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+			response.setData(new ArrayList<>());
+			response.setStatus(false);
+			response.setMessage(e.getMessage());
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.setData(new ArrayList<>());
+			response.setStatus(false);
+			response.setMessage(e.getMessage());
+
+		}
+
+		return response;
 	}
-	
-	
+
 	@GetMapping("/listAllProposers")
 	public ResponseHandler proposers() {
-	    ResponseHandler response = new ResponseHandler();
-	    try {
-	        List<RequestDto> reqDto = proposerService.listAllProposers();
+		ResponseHandler response = new ResponseHandler();
+		try {
+			List<RequestDto> reqDto = proposerService.listAllProposers();
 
-	        response.setData(reqDto);
-	        response.setStatus(true);
-	        response.setMessage("Success");
-	       
-	    } catch (Exception e) {
-	        e.printStackTrace(); 
-	        response.setData(new ArrayList<>());
-	        response.setStatus(false);
-	        response.setMessage("Failed to fetch proposers");
-	      
-	    }
-	    return response;
+			response.setData(reqDto);
+			response.setStatus(true);
+			response.setMessage("Success");
+			response.setTotalRecord(reqDto.size());
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.setData(new ArrayList<>());
+			response.setStatus(false);
+			response.setMessage("Failed to fetch proposers");
+
+		}
+		return response;
 	}
 
+	@GetMapping("/viewProposer/{id}")
+	public ResponseHandler getProposerWithNominees(@PathVariable Integer id) {
+		ResponseHandler response = new ResponseHandler();
+		try {
+			ResponseDto data = proposerService.proposerFindById(id);
 
-	@GetMapping("/allProposer/{id}")
-	public ResponseEntity<ResponseDto> getProposerWithNominees(@PathVariable Integer id) {
-	    ResponseDto proposerFindById = proposerService.proposerFindById(id);
-	    return ResponseEntity.ok(proposerFindById);
+			if (data == null || data.getFirstName() == null) {
+				response.setData(new ArrayList<>());
+				response.setStatus(false);
+				response.setMessage("Proposer not found");
+			} else {
+				response.setData(data);
+				response.setStatus(true);
+				response.setMessage("success");
+			}
+		} catch (Exception e) {
+			response.setData(new ArrayList<>());
+			response.setStatus(false);
+			response.setMessage("failed");
+		}
+		return response;
 	}
-
 
 	@DeleteMapping("/deleteProposer/{proposerId}")
 	public ResponseHandler deleteProposer(@PathVariable Integer proposerId) {
-		
+
 		ResponseHandler response = new ResponseHandler();
 		try {
 
@@ -132,18 +164,17 @@ public class ProposerController {
 
 		ResponseHandler response = new ResponseHandler();
 		try {
-		    String result = proposerService.updateProposer(proposerId, requestDto);
-		    response.setStatus(true);
-		    response.setMessage(result);
-		    response.setData(result);
+			String result = proposerService.updateProposer(proposerId, requestDto);
+			response.setStatus(true);
+			response.setMessage(result);
+			response.setData(result);
 		} catch (IllegalArgumentException e) {
-		    response.setStatus(false);
-		    response.setMessage("Validation failed");
-		    response.setErrors(List.of(e.getMessage().split("; ")));  
-		    response.setData(List.of());
+			response.setStatus(false);
+			response.setMessage("Validation failed");
+			response.setErrors(List.of(e.getMessage().split("; ")));
+			response.setData(List.of());
 		}
 
-		
 		return response;
 
 	}
