@@ -1,7 +1,9 @@
 package com.InsuranceProposerCrud.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -19,7 +21,6 @@ import com.InsuranceProposerCrud.request.RequestDto;
 import com.InsuranceProposerCrud.request.ResponseDto;
 
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -163,11 +164,6 @@ public class ProposerServiceImpl implements ProposerService {
 
 	@Override
 	public List<Proposer> allProposer(ProposerPagination pagination) {
-//		List<ProposerSearchFilter> searchFilters = pagination.getSearchFilters();
-//		String email;
-//		for (ProposerSearchFilter proposerSearchFilter : searchFilters) {
-//			 email = proposerSearchFilter.getEmail();
-//		}
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
@@ -447,7 +443,6 @@ public class ProposerServiceImpl implements ProposerService {
 						nomineeRepo.save(Existingnominiee);
 					}
 				}
-
 			}
 
 			if (requestDto.getDoYouWantToAddNominee().equalsIgnoreCase("y")) {
@@ -486,6 +481,77 @@ public class ProposerServiceImpl implements ProposerService {
 	@Override
 	public Optional<Proposer> proposerUpdateByIdAndStatus(Integer proposerId, String status) {
 		return Optional.empty();
+	}
+
+	@Override
+	public List<Proposer> fetchAllProposerByStringBuilder(ProposerPagination pagination) {
+		
+		StringBuilder sb = new StringBuilder("SELECT p FROM Proposer p WHERE p.status='y'");
+
+		Map<String, Object> params = new HashMap<>();
+
+		ProposerSearchFilter filter = pagination.getSearchFilters();
+
+		// Add dynamic filters
+		if (filter.getFirstName() != null && !filter.getFirstName().isEmpty()) {
+			sb.append(" AND LOWER(p.firstName) LIKE :firstName");
+			params.put("firstName", "%" + filter.getFirstName().toLowerCase() + "%");
+		}
+
+		if (filter.getLastName() != null && !filter.getLastName().isEmpty()) {
+			sb.append(" AND LOWER(p.lastName) LIKE :lastName");
+			params.put("lastName", "%" + filter.getLastName().toLowerCase() + "%");
+		}
+
+		if (filter.getEmail() != null && !filter.getEmail().isEmpty()) {
+			sb.append("AND LOWER(p.email) LIKE :email");
+			params.put("email", "%" + filter.getEmail().toLowerCase() + "%");
+		}
+
+		if (filter.getMobileNo() != null) {
+			sb.append("AND LOWER(p.mobileNo) LIKE :mobileNo");
+			params.put("mobileNo", "%" + filter.getMobileNo() + "%");
+		}
+
+		if (filter.getStatus() != null && !filter.getStatus().isEmpty()) {
+			sb.append("AND LOWER(sb.status) LIKE :status");
+			params.put("status", "%" + filter.getStatus().toLowerCase() + "%");
+		}
+
+		String sortBy = pagination.getSortBy();
+		String sortOrder = pagination.getSortOrder();
+
+		if (!sortOrder.equalsIgnoreCase("asc") && !sortOrder.equalsIgnoreCase("desc")) {
+			sortOrder = "desc";
+		}
+
+		if (sortBy == null || sortBy.trim().isEmpty()) {
+			sortBy = "proposerId";
+		}
+
+		if (sortOrder == null || sortOrder.trim().isEmpty()) {
+			sortOrder = "desc";
+		}
+
+		sb.append(" ORDER BY p.").append(sortBy).append(" ").append(sortOrder); //ORDER BY p.proposerId desc
+
+		TypedQuery<Proposer> query = entityManager.createQuery(sb.toString(), Proposer.class);
+
+		for (Map.Entry<String, Object> entry : params.entrySet()) {
+			query.setParameter(entry.getKey(), entry.getValue());
+		}
+
+		int page = pagination.getPage();
+		int size = pagination.getSize();
+
+		if (page == 0 && size == 0) {
+			return query.getResultList(); // return all records
+		} else {
+			query.setFirstResult((page - 1) * size);
+			query.setMaxResults(size);
+		}
+
+		return query.getResultList();
 	}
 
 }

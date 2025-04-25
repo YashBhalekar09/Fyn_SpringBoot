@@ -17,6 +17,8 @@ public interface ProposerService {
 
 	List<Proposer> allProposer(ProposerPagination pagination);
 	
+	List<Proposer> fetchAllProposerByStringBuilder(ProposerPagination pagination);
+	
 	public ResponseDto proposerFindById(Integer proposerId);
 	
 	public String deleteProposer(Integer proposerId);

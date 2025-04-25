@@ -60,8 +60,8 @@ public class ProposerController {
 		return response;
 	}
 
-	@PostMapping("/allProposer")
-	public ResponseHandler allProposer(@RequestBody ProposerPagination pagination) {
+	@PostMapping("/all_proposer_by_criteriaBuilder")
+	public ResponseHandler allProposerByCriteriaBuilder(@RequestBody ProposerPagination pagination) {
 		ResponseHandler response = new ResponseHandler();
 
 		List<RequestDto> getAllCount = proposerService.listAllProposers();
@@ -74,7 +74,11 @@ public class ProposerController {
 			response.setStatus(true);
 			response.setMessage("Success");
 
-			if (pagination.getSearchFilters() != null) {
+			if (pagination.getSearchFilters() != null || pagination.getSearchFilters().getFirstName() != null
+					|| pagination.getSearchFilters().getLastName() != null
+					|| pagination.getSearchFilters().getEmail() != null
+					|| pagination.getSearchFilters().getMobileNo() != null
+					|| pagination.getSearchFilters().getStatus() != null) {
 				response.setTotalRecord(allProposer.size());
 			} else {
 				response.setTotalRecord(count);
@@ -92,6 +96,40 @@ public class ProposerController {
 			response.setStatus(false);
 			response.setMessage(e.getMessage());
 
+		}
+
+		return response;
+	}
+
+	@PostMapping("/all_proposer_by_stringBuilder")
+	public ResponseHandler allProposerByStringBuilder(@RequestBody ProposerPagination pagination) {
+		ResponseHandler response = new ResponseHandler();
+
+		try {
+			// Get filtered + paginated data
+			List<Proposer> pagedData = proposerService.allProposer(pagination);
+			response.setData(pagedData);
+			response.setStatus(true);
+			response.setMessage("Success");
+
+			if (pagination.getSearchFilters() != null) {
+				pagination.setPage(0);
+				pagination.setSize(0);
+				response.setTotalRecord(proposerService.allPro poser(pagination).size());
+			} else {
+				response.setTotalRecord(proposerService.listAllProposers().size());
+			}
+
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+			response.setData(new ArrayList<>());
+			response.setStatus(false);
+			response.setMessage(e.getMessage());
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.setData(new ArrayList<>());
+			response.setStatus(false);
+			response.setMessage(e.getMessage());
 		}
 
 		return response;
