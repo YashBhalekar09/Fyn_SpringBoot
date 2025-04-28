@@ -1,5 +1,6 @@
 package com.InsuranceProposerCrud.controller;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -23,6 +24,10 @@ import com.InsuranceProposerCrud.request.RequestDto;
 import com.InsuranceProposerCrud.request.ResponseDto;
 import com.InsuranceProposerCrud.response.ResponseHandler;
 import com.InsuranceProposerCrud.service.ProposerService;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletResponse;
+
 import org.springframework.web.bind.annotation.PutMapping;
 
 @RestController
@@ -106,7 +111,7 @@ public class ProposerController {
 		ResponseHandler response = new ResponseHandler();
 
 		try {
-			// Get filtered + paginated data
+			
 			List<Proposer> pagedData = proposerService.allProposer(pagination);
 			response.setData(pagedData);
 			response.setStatus(true);
@@ -115,7 +120,7 @@ public class ProposerController {
 			if (pagination.getSearchFilters() != null) {
 				pagination.setPage(0);
 				pagination.setSize(0);
-				response.setTotalRecord(proposerService.allPro poser(pagination).size());
+				response.setTotalRecord(proposerService.allProposer(pagination).size());
 			} else {
 				response.setTotalRecord(proposerService.listAllProposers().size());
 			}
@@ -158,17 +163,23 @@ public class ProposerController {
 	@GetMapping("/viewProposer/{id}")
 	public ResponseHandler getProposerWithNominees(@PathVariable Integer id) {
 		ResponseHandler response = new ResponseHandler();
+		List<String> errors = new ArrayList<>();
+		errors.add("Proposer not found for the given ID "+id);
 		try {
 			ResponseDto data = proposerService.proposerFindById(id);
+			int count=(data != null) ? 1 : 0;
 
 			if (data == null || data.getFirstName() == null) {
 				response.setData(new ArrayList<>());
 				response.setStatus(false);
 				response.setMessage("Proposer not found");
+				response.setTotalRecord(0);
+				response.setErrors(errors);
 			} else {
 				response.setData(data);
 				response.setStatus(true);
 				response.setMessage("success");
+				response.setTotalRecord(count);
 			}
 		} catch (Exception e) {
 			response.setData(new ArrayList<>());
@@ -218,12 +229,74 @@ public class ProposerController {
 	}
 
 	@GetMapping("/getByEmail/{email}")
-	public ResponseEntity<Optional<Proposer>> findByEmail(@PathVariable String email) {
+	public ResponseHandler findByEmail(@PathVariable String email) {
 		Optional<Proposer> prop = proposerService.findByEmail(email);
+		Optional<Proposer> getAllCount = proposerService.findByEmail(email);
+		int count = getAllCount.isPresent() ? 1 : 0;
+		ResponseHandler response=new ResponseHandler();
 		if (prop.isPresent()) {
-			return new ResponseEntity<Optional<Proposer>>(prop, HttpStatus.OK);
+			response.setData(prop);
+			response.setStatus(true);
+			response.setMessage("Success");
+			response.setTotalRecord(count);
+			
 		}
-		return new ResponseEntity<>(prop, HttpStatus.NOT_FOUND);
+		else {
+			response.setData(new ArrayList<>());
+			response.setStatus(false);
+			response.setMessage("failed");
+			response.setTotalRecord(count);
+			
+		}
+		return response;
 	}
+	
+	
+	
+	 @PostMapping("/fetchProposerByJoin")
+	    public ResponseHandler allProposers(@RequestBody ProposerPagination pagination) {
+	        ResponseHandler response = new ResponseHandler();
+
+	        try {
+	            // Call the service to fetch the proposers based on the pagination filters
+	            List<Proposer> proposers = proposerService.fetchAllProposersWithNomineesByJoin(pagination);
+	            
+	            // Calculate the total number of records for pagination
+	            List<RequestDto> totalRecords = proposerService.listAllProposers();
+
+	            response.setData(proposers);
+	            response.setTotalRecord(totalRecords);  // Setting total count of records
+	            response.setStatus(true);
+	            response.setMessage("Proposers fetched successfully");
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	            response.setData(new ArrayList<>());
+	            response.setStatus(false);
+	            response.setMessage("Error: " + e.getMessage());
+	        }
+
+	        return response;
+	    }
+	 
+		@GetMapping("/fileExport")
+		public void exportProposersToExcel(HttpServletResponse response) throws ServletException, IOException {
+			
+
+//			try {
+//				String filePath = "C:/Excel/proposers_data.xlsx";
+//				proposerService.exportProposersToExcel(filePath);
+//				return "Excel file created successfully at " + filePath;
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//				return "Error occurred while generating the Excel file";
+//			}
+			
+			response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+			response.setHeader("Content-Disposition", "attachment; filename=proposers_data.xlsx");
+
+			
+			proposerService.exportProposersToExcel(response);
+
+		}
 
 }

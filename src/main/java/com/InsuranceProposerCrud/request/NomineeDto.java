@@ -11,7 +11,7 @@ public class NomineeDto {
 	private Gender nomineeGender;
 	private Date nomineeDOB;
 	private String relationWithNominee;
-	private Integer nomineeId;
+	//private Integer nomineeId;
 	
 	private Boolean isUpdate; // optional flag
 
@@ -23,13 +23,6 @@ public class NomineeDto {
 		this.isUpdate = isUpdate;
 	}
 
-	public Integer getNomineeId() {
-		return nomineeId;
-	}
-
-	public void setNomineeId(Integer nomineeId) {
-		this.nomineeId = nomineeId;
-	}
 
 	private Integer proposerId; // foreign key
 

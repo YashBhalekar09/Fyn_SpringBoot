@@ -5,6 +5,7 @@ import java.util.Date;
 
 import com.InsuranceProposerCrud.enumclasses.Gender;
 import com.InsuranceProposerCrud.enumclasses.ProposerTitle;
+import com.InsuranceProposerCrud.request.NomineeDto;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -71,7 +72,7 @@ public class Proposer {
 	@Column(name="state")
 	private String state;
 	
-
+	
 	public String getFirstName() {
 		return firstName;
 	}

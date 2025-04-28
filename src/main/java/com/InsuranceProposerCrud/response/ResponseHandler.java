@@ -14,6 +14,9 @@ public class ResponseHandler {
 	public Object getData() {
 		return Data;
 	}
+	public void setErrors(List<String> errors) {
+		this.errors = errors;
+	}
 	public void setData(Object data) {
 		Data = data;
 	}
@@ -39,8 +42,7 @@ public class ResponseHandler {
 	public List<String> getErrors() {
 		return errors;
 	}
-	public void setErrors(List<String> errors) {
-		this.errors = errors;
-	}
+	
+	
 
 }

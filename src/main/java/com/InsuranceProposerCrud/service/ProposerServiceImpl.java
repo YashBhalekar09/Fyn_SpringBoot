@@ -1,5 +1,8 @@
 package com.InsuranceProposerCrud.service;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -7,7 +10,14 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.stereotype.Service;
 
 import com.InsuranceProposerCrud.entity.Nominee;
@@ -24,8 +34,13 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Service
 public class ProposerServiceImpl implements ProposerService {
@@ -234,6 +249,7 @@ public class ProposerServiceImpl implements ProposerService {
 
 		if (page == 0 && size == 0) {
 			return query.getResultList();
+
 		} else if (page <= 0 || size <= 0) {
 			throw new IllegalArgumentException("Page number and size must be greater than 0.");
 		} else {
@@ -280,7 +296,7 @@ public class ProposerServiceImpl implements ProposerService {
 				nomDto.setNomineeGender(nomEntity.getNomineeGender());
 				nomDto.setRelationWithNominee(nomEntity.getRelationWithNominee());
 				nomDto.setNomineeDOB(nomEntity.getNomineeDOB());
-				nomDto.setNomineeId(nomEntity.getNomineeId());
+				// nomDto.setNomineeId(nomEntity.getNomineeId());
 				nomDto.setIsUpdate(false);
 				nomDto.setProposerId(proposerId);
 
@@ -320,156 +336,140 @@ public class ProposerServiceImpl implements ProposerService {
 
 	@Override
 	public String updateProposer(Integer proposerId, RequestDto requestDto) {
-		// Optional<Proposer> opt = proposerRepo.findByProposerIdAndStatus(proposerId,
-		// "y");
 
 		Optional<Proposer> opt = proposerRepo.findByProposerIdAndStatus(proposerId, "y");
 
-		if (opt.isPresent()) {
-			Proposer existing = opt.get();
-			List<String> errors = new ArrayList<>();
+		if (!opt.isPresent()) {
+			throw new NoSuchElementException("Proposer not found with ID: " + proposerId);
+		}
 
-			// Validation
+		Proposer existing = opt.get();
+		List<String> errors = new ArrayList<>();
+
+		// Validations
+		if (requestDto.getEmail() != null) {
 			Optional<Proposer> emailCheck = proposerRepo.findByEmail(requestDto.getEmail());
-			if (requestDto.getEmail() != null && !requestDto.getEmail().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$"))
+			if (!requestDto.getEmail().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
 				errors.add("Invalid email format");
-			if (emailCheck.isPresent() && !emailCheck.get().getProposerId().equals(proposerId))
-				errors.add("Email already exists");
-
-			Optional<Proposer> panCheck = proposerRepo.findByPanNumber(requestDto.getPanNumber());
-			if (requestDto.getPanNumber() != null && !requestDto.getPanNumber().matches("^[A-Z]{5}[0-9]{4}[A-Z]$"))
-				errors.add("Invalid PAN format");
-			if (panCheck.isPresent() && !panCheck.get().getProposerId().equals(proposerId))
-				errors.add("PAN number already exists");
-
-			Optional<Proposer> aadharCheck = proposerRepo.findByAadharNo(requestDto.getAadharNo());
-			if (requestDto.getAadharNo() != null && String.valueOf(requestDto.getAadharNo()).length() != 12)
-				errors.add("Aadhar number must be 12 digits");
-			if (aadharCheck.isPresent() && !aadharCheck.get().getProposerId().equals(proposerId))
-				errors.add("Aadhar number already exists");
-
-			Optional<Proposer> mobileCheck = proposerRepo.findByMobileNo(requestDto.getMobileNo());
-			if (requestDto.getMobileNo() != null && String.valueOf(requestDto.getMobileNo()).length() != 10)
-				errors.add("Mobile number must be 10 digits");
-			if (mobileCheck.isPresent() && !mobileCheck.get().getProposerId().equals(proposerId))
-				errors.add("Mobile number already exists");
-
-			if (requestDto.getPincode() != null && String.valueOf(requestDto.getPincode()).length() != 6)
-				errors.add("Pincode must be 6 digits");
-
-			if (!errors.isEmpty())
-				throw new IllegalArgumentException(String.join("; ", errors));
-
-			// Update proposer fields
-			if (requestDto.getProposerTitle() != null)
-				existing.setProposerTitle(requestDto.getProposerTitle());
-			if (requestDto.getFirstName() != null)
-				existing.setFirstName(requestDto.getFirstName());
-			if (requestDto.getMiddleName() != null)
-				existing.setMiddleName(requestDto.getMiddleName());
-			if (requestDto.getLastName() != null)
-				existing.setLastName(requestDto.getLastName());
-			if (requestDto.getGender() != null)
-				existing.setGender(requestDto.getGender());
-			if (requestDto.getDateOfBirth() != null)
-				existing.setDateOfBirth(requestDto.getDateOfBirth());
-			if (requestDto.getPanNumber() != null)
-				existing.setPanNumber(requestDto.getPanNumber());
-			if (requestDto.getAadharNo() != null)
-				existing.setAadharNo(requestDto.getAadharNo());
-			if (requestDto.getEmail() != null)
-				existing.setEmail(requestDto.getEmail());
-			if (requestDto.getMobileNo() != null)
-				existing.setMobileNo(requestDto.getMobileNo());
-			if (requestDto.getAlternateMobNo() != null)
-				existing.setAlternateMobNo(requestDto.getAlternateMobNo());
-			if (requestDto.getAddressLine1() != null)
-				existing.setAddressLine1(requestDto.getAddressLine1());
-			if (requestDto.getAddressLine2() != null)
-				existing.setAddressLine2(requestDto.getAddressLine2());
-			if (requestDto.getAddressLine3() != null)
-				existing.setAddressLine3(requestDto.getAddressLine3());
-			if (requestDto.getCity() != null)
-				existing.setCity(requestDto.getCity());
-			if (requestDto.getState() != null)
-				existing.setState(requestDto.getState());
-			if (requestDto.getPincode() != null)
-				existing.setPincode(requestDto.getPincode());
-
-			// Save proposer
-			Proposer proposerDetails = proposerRepo.save(existing);
-
-//		NomineeDto dto = requestDto.getNomineeDetails();
-////		List<Nominee> updatedNominees = new ArrayList<>();
-//
-//		// Get existing nominees for the proposer
-//		Optional<Nominee> byProposerId = nomineeRepo.findByProposerId(proposerId);
-//
-//		if (!byProposerId.isPresent()) {
-//			throw new IllegalArgumentException("Invalid Id");
-//		}
-//// Update each existing nominee with data from nomineeDtos	
-//		Nominee nominee2 = byProposerId.get();
-//		nominee2.setNomineeLastName(dto.getNomineeLastName());
-//		nominee2.setNomineeDOB(dto.getNomineeDOB());
-//		nominee2.setNomineeGender(dto.getNomineeGender());
-//		nominee2.setRelationWithNominee(dto.getRelationWithNominee());
-//		
-//
-//		if("y".equalsIgnoreCase(nominee2.getStatus()) ) {
-//			nominee2.setStatus("y");
-//		}
-//	
-//		nomineeRepo.save(nominee2);
-
-			NomineeDto nomineeDto = requestDto.getNomineeDetails();
-
-			Optional<Nominee> optional = nomineeRepo.findByProposerIdAndStatus(proposerId, "y");
-
-			if (requestDto.getDoYouWantToAddNominee().equalsIgnoreCase("n")) {
-				if (requestDto.getDoYouWantUpdateNominee().equalsIgnoreCase("y" + "")) {
-
-					if (optional.isPresent()) {
-						Nominee Existingnominiee = optional.get();
-
-						// Existingnominiee.setAddress(nomineeDto.getnAddress());
-						Existingnominiee.setNomineeDOB(nomineeDto.getNomineeDOB());
-						Existingnominiee.setNomineeGender(nomineeDto.getNomineeGender());
-						// Existingnominiee.setMobileNo(nomineeDto.getMobileNo());
-						Existingnominiee.setNomineeFirstName(nomineeDto.getNomineeFirstName());
-						Existingnominiee.setNomineeLastName(nomineeDto.getNomineeLastName());
-						Existingnominiee.setRelationWithNominee(nomineeDto.getRelationWithNominee());
-
-						nomineeRepo.save(Existingnominiee);
-					}
-				}
 			}
-
-			if (requestDto.getDoYouWantToAddNominee().equalsIgnoreCase("y")) {
-
-				Nominee existingNominee = optional.get();
-
-				existingNominee.setStatus("n");
-
-				Nominee newNominee = new Nominee();
-
-				NomineeDto nomineeDtoNew = requestDto.getNomineeDetails();
-
-				newNominee.setProposerId(proposerDetails.getProposerId());
-
-				newNominee.setNomineeDOB(nomineeDtoNew.getNomineeDOB());
-				newNominee.setNomineeGender(nomineeDtoNew.getNomineeGender());
-
-				newNominee.setNomineeFirstName(nomineeDtoNew.getNomineeFirstName());
-				newNominee.setNomineeLastName(nomineeDtoNew.getNomineeLastName());
-				newNominee.setRelationWithNominee(nomineeDtoNew.getRelationWithNominee());
-
-				nomineeRepo.save(newNominee);
-
-			} else {
-				throw new NoSuchElementException("Proposer not found with ID: " + proposerId);
+			if (emailCheck.isPresent() && !emailCheck.get().getProposerId().equals(proposerId)) {
+				errors.add("Email already exists");
 			}
 		}
+
+		if (requestDto.getPanNumber() != null) {
+			Optional<Proposer> panCheck = proposerRepo.findByPanNumber(requestDto.getPanNumber());
+			if (!requestDto.getPanNumber().matches("^[A-Z]{5}[0-9]{4}[A-Z]$")) {
+				errors.add("Invalid PAN format");
+			}
+			if (panCheck.isPresent() && !panCheck.get().getProposerId().equals(proposerId)) {
+				errors.add("PAN number already exists");
+			}
+		}
+
+		if (requestDto.getAadharNo() != null) {
+			Optional<Proposer> aadharCheck = proposerRepo.findByAadharNo(requestDto.getAadharNo());
+			if (String.valueOf(requestDto.getAadharNo()).length() != 12) {
+				errors.add("Aadhar number must be 12 digits");
+			}
+			if (aadharCheck.isPresent() && !aadharCheck.get().getProposerId().equals(proposerId)) {
+				errors.add("Aadhar number already exists");
+			}
+		}
+
+		if (requestDto.getMobileNo() != null) {
+			Optional<Proposer> mobileCheck = proposerRepo.findByMobileNo(requestDto.getMobileNo());
+			if (String.valueOf(requestDto.getMobileNo()).length() != 10) {
+				errors.add("Mobile number must be 10 digits");
+			}
+			if (mobileCheck.isPresent() && !mobileCheck.get().getProposerId().equals(proposerId)) {
+				errors.add("Mobile number already exists");
+			}
+		}
+
+		if (requestDto.getPincode() != null && String.valueOf(requestDto.getPincode()).length() != 6) {
+			errors.add("Pincode must be 6 digits");
+		}
+
+		if (!errors.isEmpty()) {
+			throw new IllegalArgumentException(String.join("; ", errors));
+		}
+
+		// Update proposer fields
+		if (requestDto.getProposerTitle() != null)
+			existing.setProposerTitle(requestDto.getProposerTitle());
+		if (requestDto.getFirstName() != null)
+			existing.setFirstName(requestDto.getFirstName());
+		if (requestDto.getMiddleName() != null)
+			existing.setMiddleName(requestDto.getMiddleName());
+		if (requestDto.getLastName() != null)
+			existing.setLastName(requestDto.getLastName());
+		if (requestDto.getGender() != null)
+			existing.setGender(requestDto.getGender());
+		if (requestDto.getDateOfBirth() != null)
+			existing.setDateOfBirth(requestDto.getDateOfBirth());
+		if (requestDto.getPanNumber() != null)
+			existing.setPanNumber(requestDto.getPanNumber());
+		if (requestDto.getAadharNo() != null)
+			existing.setAadharNo(requestDto.getAadharNo());
+		if (requestDto.getEmail() != null)
+			existing.setEmail(requestDto.getEmail());
+		if (requestDto.getMobileNo() != null)
+			existing.setMobileNo(requestDto.getMobileNo());
+		if (requestDto.getAlternateMobNo() != null)
+			existing.setAlternateMobNo(requestDto.getAlternateMobNo());
+		if (requestDto.getAddressLine1() != null)
+			existing.setAddressLine1(requestDto.getAddressLine1());
+		if (requestDto.getAddressLine2() != null)
+			existing.setAddressLine2(requestDto.getAddressLine2());
+		if (requestDto.getAddressLine3() != null)
+			existing.setAddressLine3(requestDto.getAddressLine3());
+		if (requestDto.getCity() != null)
+			existing.setCity(requestDto.getCity());
+		if (requestDto.getState() != null)
+			existing.setState(requestDto.getState());
+		if (requestDto.getPincode() != null)
+			existing.setPincode(requestDto.getPincode());
+
+		Proposer proposerDetails = proposerRepo.save(existing);
+
+		// Handling Nominee
+		NomineeDto nomineeDto = requestDto.getNomineeDetails();
+		Optional<Nominee> nomineeOpt = nomineeRepo.findByProposerIdAndStatus(proposerId, "y");
+
+		if (requestDto.getDoYouWantToAddNominee() != null
+				&& requestDto.getDoYouWantToAddNominee().equalsIgnoreCase("y")) {
+			if (nomineeOpt.isPresent()) {
+				Nominee oldNominee = nomineeOpt.get();
+				oldNominee.setStatus("n");
+				nomineeRepo.save(oldNominee);
+			}
+
+			Nominee newNominee = new Nominee();
+			newNominee.setProposerId(proposerDetails.getProposerId());
+			newNominee.setNomineeDOB(nomineeDto.getNomineeDOB());
+			newNominee.setNomineeGender(nomineeDto.getNomineeGender());
+			newNominee.setNomineeFirstName(nomineeDto.getNomineeFirstName());
+			newNominee.setNomineeLastName(nomineeDto.getNomineeLastName());
+			newNominee.setRelationWithNominee(nomineeDto.getRelationWithNominee());
+
+			nomineeRepo.save(newNominee);
+		} else if (requestDto.getDoYouWantUpdateNominee() != null
+				&& requestDto.getDoYouWantUpdateNominee().equalsIgnoreCase("y")) {
+			if (nomineeOpt.isPresent()) {
+				Nominee existingNominee = nomineeOpt.get();
+				existingNominee.setNomineeDOB(nomineeDto.getNomineeDOB());
+				existingNominee.setNomineeGender(nomineeDto.getNomineeGender());
+				existingNominee.setNomineeFirstName(nomineeDto.getNomineeFirstName());
+				existingNominee.setNomineeLastName(nomineeDto.getNomineeLastName());
+				existingNominee.setRelationWithNominee(nomineeDto.getRelationWithNominee());
+
+				nomineeRepo.save(existingNominee);
+			} else {
+				throw new NoSuchElementException("No existing nominee found to update.");
+			}
+		}
+
 		return "Proposer updated successfully!";
 	}
 
@@ -485,7 +485,7 @@ public class ProposerServiceImpl implements ProposerService {
 
 	@Override
 	public List<Proposer> fetchAllProposerByStringBuilder(ProposerPagination pagination) {
-		
+
 		StringBuilder sb = new StringBuilder("SELECT p FROM Proposer p WHERE p.status='y'");
 
 		Map<String, Object> params = new HashMap<>();
@@ -533,7 +533,7 @@ public class ProposerServiceImpl implements ProposerService {
 			sortOrder = "desc";
 		}
 
-		sb.append(" ORDER BY p.").append(sortBy).append(" ").append(sortOrder); //ORDER BY p.proposerId desc
+		sb.append(" ORDER BY p.").append(sortBy).append(" ").append(sortOrder); // ORDER BY p.proposerId desc
 
 		TypedQuery<Proposer> query = entityManager.createQuery(sb.toString(), Proposer.class);
 
@@ -552,6 +552,154 @@ public class ProposerServiceImpl implements ProposerService {
 		}
 
 		return query.getResultList();
+	}
+
+	@Override
+	public List<Proposer> fetchAllProposersWithNomineesByJoin(ProposerPagination pagination) {
+		// Create CriteriaBuilder and CriteriaQuery
+		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+		CriteriaQuery<Proposer> criteriaQuery = criteriaBuilder.createQuery(Proposer.class);
+
+		// Define the root of the query (Proposer)
+		Root<Proposer> proposerRoot = criteriaQuery.from(Proposer.class);
+
+		// Join Proposer to Nominee (assuming Nominee has the proposerId as the foreign
+		// key)
+		Join<Proposer, Nominee> nomineeJoin = proposerRoot.join("nomineeDetails", JoinType.LEFT); // LEFT JOIN if not
+																									// every Proposer
+																									// has a Nominee
+
+		// List to store predicates (conditions for the query)
+		List<Predicate> predicates = new ArrayList<>();
+
+		// Get filters from pagination
+		ProposerSearchFilter filter = pagination.getSearchFilters();
+
+		// Add dynamic filtering conditions
+		if (filter.getFirstName() != null && !filter.getFirstName().isEmpty()) {
+			Predicate firstNamePredicate = criteriaBuilder.like(criteriaBuilder.lower(proposerRoot.get("firstName")),
+					"%" + filter.getFirstName().toLowerCase() + "%");
+			predicates.add(firstNamePredicate);
+		}
+
+		if (filter.getLastName() != null && !filter.getLastName().isEmpty()) {
+			Predicate lastNamePredicate = criteriaBuilder.like(criteriaBuilder.lower(proposerRoot.get("lastName")),
+					"%" + filter.getLastName().toLowerCase() + "%");
+			predicates.add(lastNamePredicate);
+		}
+
+		if (filter.getEmail() != null && !filter.getEmail().isEmpty()) {
+			Predicate emailPredicate = criteriaBuilder.like(criteriaBuilder.lower(proposerRoot.get("email")),
+					"%" + filter.getEmail().toLowerCase() + "%");
+			predicates.add(emailPredicate);
+		}
+
+		if (filter.getMobileNo() != null) {
+			Predicate mobileNoPredicate = criteriaBuilder.like(criteriaBuilder.lower(proposerRoot.get("mobileNo")),
+					"%" + filter.getMobileNo() + "%");
+			predicates.add(mobileNoPredicate);
+		}
+
+		if (filter.getStatus() != null && !filter.getStatus().isEmpty()) {
+			Predicate statusPredicate = criteriaBuilder.equal(proposerRoot.get("status"), filter.getStatus());
+			predicates.add(statusPredicate);
+		}
+
+		// Combine all predicates using AND logic
+		criteriaQuery.where(criteriaBuilder.and(predicates.toArray(new Predicate[0])));
+
+		// Add sorting logic (based on sortBy and sortOrder)
+		String sortBy = pagination.getSortBy();
+		String sortOrder = pagination.getSortOrder();
+		if (sortBy != null && !sortBy.isEmpty()) {
+			if (sortOrder.equalsIgnoreCase("desc")) {
+				criteriaQuery.orderBy(criteriaBuilder.desc(proposerRoot.get(sortBy)));
+			} else {
+				criteriaQuery.orderBy(criteriaBuilder.asc(proposerRoot.get(sortBy)));
+			}
+		}
+
+		// Create the query and set pagination (page and size)
+		TypedQuery<Proposer> query = entityManager.createQuery(criteriaQuery);
+
+		int page = pagination.getPage();
+		int size = pagination.getSize();
+		if (page > 0 && size > 0) {
+			query.setFirstResult((page - 1) * size); // Set starting record
+			query.setMaxResults(size); // Set number of records per page
+		}
+
+		// Execute the query and get results
+		return query.getResultList(); // Return the Proposer list with NomineeDetails
+	}
+
+	@Override
+	public void exportProposersToExcel(HttpServletResponse response) throws ServletException,IOException {
+		
+		List<Proposer> allProposers = proposerRepo.findAllByStatus("y");
+
+		XSSFWorkbook workbook = new XSSFWorkbook();
+
+		XSSFSheet sheet = workbook.createSheet("Proposer_Data");
+		
+		XSSFRow headerRow = sheet.createRow(0);
+		
+		headerRow.createCell(0).setCellValue("Proposer ID");
+		headerRow.createCell(1).setCellValue("Title");
+		headerRow.createCell(2).setCellValue("First Name");
+		headerRow.createCell(3).setCellValue("Middle Name");
+		headerRow.createCell(4).setCellValue("Last Name");
+		headerRow.createCell(5).setCellValue("Gender");
+		headerRow.createCell(6).setCellValue("Date of Birth");
+		headerRow.createCell(7).setCellValue("PAN Number");
+		headerRow.createCell(8).setCellValue("Aadhar Number");
+		headerRow.createCell(9).setCellValue("Status");
+		headerRow.createCell(10).setCellValue("Email");
+		headerRow.createCell(11).setCellValue("Mobile No");
+		headerRow.createCell(12).setCellValue("Alternate Mobile No");
+		headerRow.createCell(13).setCellValue("Address Line 1");
+		headerRow.createCell(14).setCellValue("Address Line 2");
+		headerRow.createCell(15).setCellValue("Address Line 3");
+		headerRow.createCell(16).setCellValue("Pincode");
+		headerRow.createCell(17).setCellValue("City");
+		headerRow.createCell(18).setCellValue("State");
+
+		int rowIndex = 1;
+
+		for (Proposer proposer : allProposers) {
+			
+			Row row = sheet.createRow(rowIndex++);
+			
+			row.createCell(0).setCellValue(proposer.getProposerId());
+			row.createCell(1).setCellValue(proposer.getProposerTitle().toString());
+			row.createCell(2).setCellValue(proposer.getFirstName());
+			row.createCell(3).setCellValue(proposer.getMiddleName());
+			row.createCell(4).setCellValue(proposer.getLastName());
+			row.createCell(5).setCellValue(proposer.getGender().toString());
+			row.createCell(6).setCellValue(proposer.getDateOfBirth().toString());
+			row.createCell(7).setCellValue(proposer.getPanNumber());
+			row.createCell(8).setCellValue(proposer.getAadharNo());
+			row.createCell(9).setCellValue(proposer.getStatus());
+			row.createCell(10).setCellValue(proposer.getEmail());
+			row.createCell(11).setCellValue(proposer.getMobileNo());
+			row.createCell(12).setCellValue(proposer.getAlternateMobNo());
+			row.createCell(13).setCellValue(proposer.getAddressLine1());
+			row.createCell(14).setCellValue(proposer.getAddressLine2());
+			row.createCell(15).setCellValue(proposer.getAddressLine3());
+			row.createCell(16).setCellValue(proposer.getPincode());
+			row.createCell(17).setCellValue(proposer.getCity());
+			row.createCell(18).setCellValue(proposer.getState());
+		}
+		
+//		try(FileOutputStream fileOutput=new FileOutputStream(filePath))
+//		{
+//			workbook.write(fileOutput);
+//		}
+		
+		ServletOutputStream output=response.getOutputStream();
+		workbook.write(output);
+		workbook.close();
+		output.close();
 	}
 
 }

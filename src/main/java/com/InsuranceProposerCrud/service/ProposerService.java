@@ -1,12 +1,19 @@
 package com.InsuranceProposerCrud.service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import org.springframework.http.server.ServletServerHttpResponse;
+
 import com.InsuranceProposerCrud.entity.Proposer;
 import com.InsuranceProposerCrud.entity.ProposerPagination;
 import com.InsuranceProposerCrud.request.RequestDto;
 import com.InsuranceProposerCrud.request.ResponseDto;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletResponse;
 
 public interface ProposerService {
 
@@ -32,8 +39,10 @@ public interface ProposerService {
 	Optional<Proposer> proposerUpdateByIdAndStatus(Integer proposerId, String status);
 
 	public List<RequestDto> listAllProposers();
+	
+	public List<Proposer> fetchAllProposersWithNomineesByJoin(ProposerPagination pagination);
 
-
+	public void exportProposersToExcel(HttpServletResponse response) throws ServletException, IOException;
 
 
 }
