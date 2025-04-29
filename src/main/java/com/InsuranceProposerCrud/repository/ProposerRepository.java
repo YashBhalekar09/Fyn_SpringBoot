@@ -27,6 +27,5 @@ public interface ProposerRepository extends JpaRepository<Proposer, Integer>{
 
 	public List<Proposer> findAllByStatus(String status);
 
-
 }
 

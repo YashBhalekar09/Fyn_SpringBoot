@@ -1,14 +1,19 @@
 package com.InsuranceProposerCrud.service;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -19,11 +24,14 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.InsuranceProposerCrud.entity.Nominee;
 import com.InsuranceProposerCrud.entity.Proposer;
 import com.InsuranceProposerCrud.entity.ProposerPagination;
 import com.InsuranceProposerCrud.entity.ProposerSearchFilter;
+import com.InsuranceProposerCrud.enumclasses.Gender;
+import com.InsuranceProposerCrud.enumclasses.ProposerTitle;
 import com.InsuranceProposerCrud.repository.NomineeRepository;
 import com.InsuranceProposerCrud.repository.ProposerRepository;
 import com.InsuranceProposerCrud.request.NomineeDto;
@@ -634,72 +642,138 @@ public class ProposerServiceImpl implements ProposerService {
 	}
 
 	@Override
-	public void exportProposersToExcel(HttpServletResponse response) throws ServletException,IOException {
-		
-		List<Proposer> allProposers = proposerRepo.findAllByStatus("y");
+	public String exportProposersToExcel() throws FileNotFoundException, IOException {
+
+		//List<Proposer> allProposers = proposerRepo.findAllByStatus("y");
 
 		XSSFWorkbook workbook = new XSSFWorkbook();
 
 		XSSFSheet sheet = workbook.createSheet("Proposer_Data");
-		
+
 		XSSFRow headerRow = sheet.createRow(0);
-		
-		headerRow.createCell(0).setCellValue("Proposer ID");
-		headerRow.createCell(1).setCellValue("Title");
-		headerRow.createCell(2).setCellValue("First Name");
-		headerRow.createCell(3).setCellValue("Middle Name");
-		headerRow.createCell(4).setCellValue("Last Name");
-		headerRow.createCell(5).setCellValue("Gender");
-		headerRow.createCell(6).setCellValue("Date of Birth");
-		headerRow.createCell(7).setCellValue("PAN Number");
-		headerRow.createCell(8).setCellValue("Aadhar Number");
-		headerRow.createCell(9).setCellValue("Status");
-		headerRow.createCell(10).setCellValue("Email");
-		headerRow.createCell(11).setCellValue("Mobile No");
-		headerRow.createCell(12).setCellValue("Alternate Mobile No");
-		headerRow.createCell(13).setCellValue("Address Line 1");
-		headerRow.createCell(14).setCellValue("Address Line 2");
-		headerRow.createCell(15).setCellValue("Address Line 3");
-		headerRow.createCell(16).setCellValue("Pincode");
-		headerRow.createCell(17).setCellValue("City");
-		headerRow.createCell(18).setCellValue("State");
 
-		int rowIndex = 1;
+//		headerRow.createCell(0).setCellValue("Proposer ID");
+//		headerRow.createCell(1).setCellValue("Title");
+//		headerRow.createCell(2).setCellValue("First Name");
+//		headerRow.createCell(3).setCellValue("Middle Name");
+//		headerRow.createCell(4).setCellValue("Last Name");
+//		headerRow.createCell(5).setCellValue("Gender");
+//		headerRow.createCell(6).setCellValue("Date of Birth");
+//		headerRow.createCell(7).setCellValue("PAN Number");
+//		headerRow.createCell(8).setCellValue("Aadhar Number");
+//		headerRow.createCell(9).setCellValue("Status");
+//		headerRow.createCell(10).setCellValue("Email");
+//		headerRow.createCell(11).setCellValue("Mobile No");
+//		headerRow.createCell(12).setCellValue("Alternate Mobile No");
+//		headerRow.createCell(13).setCellValue("Address Line 1");
+//		headerRow.createCell(14).setCellValue("Address Line 2");
+//		headerRow.createCell(15).setCellValue("Address Line 3");
+//		headerRow.createCell(16).setCellValue("Pincode");
+//		headerRow.createCell(17).setCellValue("City");
+//		headerRow.createCell(18).setCellValue("State");
 
-		for (Proposer proposer : allProposers) {
-			
-			Row row = sheet.createRow(rowIndex++);
-			
-			row.createCell(0).setCellValue(proposer.getProposerId());
-			row.createCell(1).setCellValue(proposer.getProposerTitle().toString());
-			row.createCell(2).setCellValue(proposer.getFirstName());
-			row.createCell(3).setCellValue(proposer.getMiddleName());
-			row.createCell(4).setCellValue(proposer.getLastName());
-			row.createCell(5).setCellValue(proposer.getGender().toString());
-			row.createCell(6).setCellValue(proposer.getDateOfBirth().toString());
-			row.createCell(7).setCellValue(proposer.getPanNumber());
-			row.createCell(8).setCellValue(proposer.getAadharNo());
-			row.createCell(9).setCellValue(proposer.getStatus());
-			row.createCell(10).setCellValue(proposer.getEmail());
-			row.createCell(11).setCellValue(proposer.getMobileNo());
-			row.createCell(12).setCellValue(proposer.getAlternateMobNo());
-			row.createCell(13).setCellValue(proposer.getAddressLine1());
-			row.createCell(14).setCellValue(proposer.getAddressLine2());
-			row.createCell(15).setCellValue(proposer.getAddressLine3());
-			row.createCell(16).setCellValue(proposer.getPincode());
-			row.createCell(17).setCellValue(proposer.getCity());
-			row.createCell(18).setCellValue(proposer.getState());
+		String[] headers = { "proposer_id", "proposer_title", "first_name", "middle_name", "last_name", "gender",
+				"date_of_birth", "pan_number", "aadhar_number", "active_status", "email", "mobile_no",
+				"alternate_mobile_number", "addressLine1", "addressLine2", "addressLine3", "pincode", "city", "state" };
+
+		for (int i = 0; i < headers.length; i++) {
+			headerRow.createCell(i).setCellValue(headers[i]);
 		}
-		
+
+//		int rowIndex = 1;
+//
+//		for (Proposer proposer : allProposers) {
+//			
+//			Row row = sheet.createRow(rowIndex++);
+//			
+//			row.createCell(0).setCellValue(proposer.getProposerId());
+//			row.createCell(1).setCellValue(proposer.getProposerTitle().toString());
+//			row.createCell(2).setCellValue(proposer.getFirstName());
+//			row.createCell(3).setCellValue(proposer.getMiddleName());
+//			row.createCell(4).setCellValue(proposer.getLastName());
+//			row.createCell(5).setCellValue(proposer.getGender().toString());
+//			row.createCell(6).setCellValue(proposer.getDateOfBirth().toString());
+//			row.createCell(7).setCellValue(proposer.getPanNumber());
+//			row.createCell(8).setCellValue(proposer.getAadharNo());
+//			row.createCell(9).setCellValue(proposer.getStatus());
+//			row.createCell(10).setCellValue(proposer.getEmail());
+//			row.createCell(11).setCellValue(proposer.getMobileNo());
+//			row.createCell(12).setCellValue(proposer.getAlternateMobNo());
+//			row.createCell(13).setCellValue(proposer.getAddressLine1());
+//			row.createCell(14).setCellValue(proposer.getAddressLine2());
+//			row.createCell(15).setCellValue(proposer.getAddressLine3());
+//			row.createCell(16).setCellValue(proposer.getPincode());
+//			row.createCell(17).setCellValue(proposer.getCity());
+//			row.createCell(18).setCellValue(proposer.getState());
+//		}
+
 //		try(FileOutputStream fileOutput=new FileOutputStream(filePath))
 //		{
 //			workbook.write(fileOutput);
 //		}
-		
-		ServletOutputStream output=response.getOutputStream();
-		workbook.write(output);
+
+		String SystemPath = "C:/ExcelFiles";
+		new File(SystemPath).mkdirs();
+
+//	    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
+//	    String formattedDateTime = LocalDateTime.now().format(formatter);
+
+		String fileName = "Proposer_Data_" + UUID.randomUUID().toString().substring(0, 4) + ".xlsx";
+		String filepath = SystemPath + "/" + fileName;
+
+		try (FileOutputStream fileOut = new FileOutputStream(filepath)) {
+			workbook.write(fileOut);
+		}
 		workbook.close();
-		output.close();
+
+		return filepath;
+
+//		ServletOutputStream output=response.getOutputStream();
+//		workbook.write(output);
+//		workbook.close();
+//		output.close();
 	}
 
+	@Override
+	public void importFromExcel(MultipartFile file) throws IOException {
+		List<Proposer> proposer = new ArrayList<>();
+		
+		XSSFWorkbook workbook = new XSSFWorkbook(file.getInputStream());
+
+		XSSFSheet sheet = workbook.getSheet("Proposr_Data");
+		
+		for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+
+			Row row = sheet.getRow(i);
+
+			if (row == null)
+				continue;
+
+			Proposer p = new Proposer();
+		
+			p.setProposerTitle(ProposerTitle.valueOf(row.getCell(1).getStringCellValue()));
+			p.setFirstName(row.getCell(2).getStringCellValue());
+			p.setMiddleName(row.getCell(3).getStringCellValue());
+			p.setLastName(row.getCell(4).getStringCellValue());
+			p.setGender(Gender.valueOf(row.getCell(5).getStringCellValue()));
+			p.setDateOfBirth((Date)row.getCell(6).getDateCellValue());
+			p.setPanNumber(row.getCell(7).getStringCellValue());
+			p.setAadharNo((long) row.getCell(8).getNumericCellValue());
+			p.setStatus(row.getCell(9).getStringCellValue());
+			p.setEmail(row.getCell(10).getStringCellValue());
+			p.setMobileNo((long) row.getCell(11).getNumericCellValue());
+			p.setAlternateMobNo((long) row.getCell(12).getNumericCellValue());
+			p.setAddressLine1(row.getCell(13).getStringCellValue());
+			p.setAddressLine2(row.getCell(14).getStringCellValue());
+			p.setAddressLine3(row.getCell(15).getStringCellValue());
+			p.setPincode((long) row.getCell(16).getNumericCellValue());
+			p.setCity(row.getCell(17).getStringCellValue());
+			p.setState(row.getCell(18).getStringCellValue());
+
+			proposer.add(p);
+		}
+		workbook.close();
+		proposerRepo.saveAll(proposer);
+	}
+	
 }

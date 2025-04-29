@@ -1,11 +1,13 @@
 package com.InsuranceProposerCrud.service;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.http.server.ServletServerHttpResponse;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.InsuranceProposerCrud.entity.Proposer;
 import com.InsuranceProposerCrud.entity.ProposerPagination;
@@ -42,7 +44,9 @@ public interface ProposerService {
 	
 	public List<Proposer> fetchAllProposersWithNomineesByJoin(ProposerPagination pagination);
 
-	public void exportProposersToExcel(HttpServletResponse response) throws ServletException, IOException;
+	public String  exportProposersToExcel() throws FileNotFoundException, IOException;
+	
+	public void importFromExcel(MultipartFile file) throws IOException;
 
 
 }

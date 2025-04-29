@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,17 +14,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.InsuranceProposerCrud.entity.Proposer;
 import com.InsuranceProposerCrud.entity.ProposerPagination;
-import com.InsuranceProposerCrud.entity.ProposerSearchFilter;
 import com.InsuranceProposerCrud.request.RequestDto;
 import com.InsuranceProposerCrud.request.ResponseDto;
 import com.InsuranceProposerCrud.response.ResponseHandler;
 import com.InsuranceProposerCrud.service.ProposerService;
-
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.web.bind.annotation.PutMapping;
 
@@ -111,7 +106,7 @@ public class ProposerController {
 		ResponseHandler response = new ResponseHandler();
 
 		try {
-			
+
 			List<Proposer> pagedData = proposerService.allProposer(pagination);
 			response.setData(pagedData);
 			response.setStatus(true);
@@ -164,10 +159,10 @@ public class ProposerController {
 	public ResponseHandler getProposerWithNominees(@PathVariable Integer id) {
 		ResponseHandler response = new ResponseHandler();
 		List<String> errors = new ArrayList<>();
-		errors.add("Proposer not found for the given ID "+id);
+		errors.add("Proposer not found for the given ID " + id);
 		try {
 			ResponseDto data = proposerService.proposerFindById(id);
-			int count=(data != null) ? 1 : 0;
+			int count = (data != null) ? 1 : 0;
 
 			if (data == null || data.getFirstName() == null) {
 				response.setData(new ArrayList<>());
@@ -233,70 +228,77 @@ public class ProposerController {
 		Optional<Proposer> prop = proposerService.findByEmail(email);
 		Optional<Proposer> getAllCount = proposerService.findByEmail(email);
 		int count = getAllCount.isPresent() ? 1 : 0;
-		ResponseHandler response=new ResponseHandler();
+		ResponseHandler response = new ResponseHandler();
 		if (prop.isPresent()) {
 			response.setData(prop);
 			response.setStatus(true);
 			response.setMessage("Success");
 			response.setTotalRecord(count);
-			
-		}
-		else {
+
+		} else {
 			response.setData(new ArrayList<>());
 			response.setStatus(false);
 			response.setMessage("failed");
 			response.setTotalRecord(count);
-			
+
 		}
 		return response;
 	}
-	
-	
-	
-	 @PostMapping("/fetchProposerByJoin")
-	    public ResponseHandler allProposers(@RequestBody ProposerPagination pagination) {
-	        ResponseHandler response = new ResponseHandler();
 
-	        try {
-	            // Call the service to fetch the proposers based on the pagination filters
-	            List<Proposer> proposers = proposerService.fetchAllProposersWithNomineesByJoin(pagination);
-	            
-	            // Calculate the total number of records for pagination
-	            List<RequestDto> totalRecords = proposerService.listAllProposers();
+	@PostMapping("/fetchProposerByJoin")
+	public ResponseHandler allProposers(@RequestBody ProposerPagination pagination) {
+		ResponseHandler response = new ResponseHandler();
 
-	            response.setData(proposers);
-	            response.setTotalRecord(totalRecords);  // Setting total count of records
-	            response.setStatus(true);
-	            response.setMessage("Proposers fetched successfully");
-	        } catch (Exception e) {
-	            e.printStackTrace();
-	            response.setData(new ArrayList<>());
-	            response.setStatus(false);
-	            response.setMessage("Error: " + e.getMessage());
-	        }
+		try {
+			// Call the service to fetch the proposers based on the pagination filters
+			List<Proposer> proposers = proposerService.fetchAllProposersWithNomineesByJoin(pagination);
 
-	        return response;
-	    }
-	 
-		@GetMapping("/fileExport")
-		public void exportProposersToExcel(HttpServletResponse response) throws ServletException, IOException {
-			
+			// Calculate the total number of records for pagination
+			List<RequestDto> totalRecords = proposerService.listAllProposers();
 
-//			try {
-//				String filePath = "C:/Excel/proposers_data.xlsx";
-//				proposerService.exportProposersToExcel(filePath);
-//				return "Excel file created successfully at " + filePath;
-//			} catch (IOException e) {
-//				e.printStackTrace();
-//				return "Error occurred while generating the Excel file";
-//			}
-			
-			response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-			response.setHeader("Content-Disposition", "attachment; filename=proposers_data.xlsx");
+			response.setData(proposers);
+			response.setTotalRecord(totalRecords); // Setting total count of records
+			response.setStatus(true);
+			response.setMessage("Proposers fetched successfully");
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.setData(new ArrayList<>());
+			response.setStatus(false);
+			response.setMessage("Error: " + e.getMessage());
+		}
 
-			
-			proposerService.exportProposersToExcel(response);
+		return response;
+	}
+
+	@GetMapping("/excelFileExport")
+	public ResponseHandler exportProposersToExcel() {
+		ResponseHandler handler = new ResponseHandler();
+		try {
+			String filePath = proposerService.exportProposersToExcel(); // returns path
+			handler.setData(filePath);
+			handler.setStatus(true);
+			handler.setMessage("File generated successfully");
+
+		} catch (IOException e) {
+			handler.setStatus(false);
+			handler.setMessage("Failed: " + e.getMessage());
 
 		}
+		return handler;
+	}
+
+	@PostMapping(value = "/excelFileImport", consumes = "multipart/form-data")
+	public ResponseHandler importDataToDB(@RequestParam("file") MultipartFile file) {
+	    ResponseHandler handler = new ResponseHandler();
+	    try {
+	        proposerService.importFromExcel(file);  
+	        handler.setStatus(true);
+	        handler.setMessage("File imported successfully");
+	    } catch (IOException e) {
+	        handler.setStatus(false);
+	        handler.setMessage("Failed to import file: " + e.getMessage());
+	    }
+	    return handler;
+	}
 
 }
