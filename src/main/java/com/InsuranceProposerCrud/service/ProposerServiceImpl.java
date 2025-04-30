@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -30,9 +31,11 @@ import com.InsuranceProposerCrud.entity.Nominee;
 import com.InsuranceProposerCrud.entity.Proposer;
 import com.InsuranceProposerCrud.entity.ProposerPagination;
 import com.InsuranceProposerCrud.entity.ProposerSearchFilter;
+import com.InsuranceProposerCrud.entity.ProposersError;
 import com.InsuranceProposerCrud.enumclasses.Gender;
 import com.InsuranceProposerCrud.enumclasses.ProposerTitle;
 import com.InsuranceProposerCrud.repository.NomineeRepository;
+import com.InsuranceProposerCrud.repository.ProposerErrorRepository;
 import com.InsuranceProposerCrud.repository.ProposerRepository;
 import com.InsuranceProposerCrud.request.NomineeDto;
 import com.InsuranceProposerCrud.request.RequestDto;
@@ -46,9 +49,6 @@ import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletOutputStream;
-import jakarta.servlet.http.HttpServletResponse;
 
 @Service
 public class ProposerServiceImpl implements ProposerService {
@@ -58,6 +58,9 @@ public class ProposerServiceImpl implements ProposerService {
 
 	@Autowired
 	private NomineeRepository nomineeRepo;
+	
+	@Autowired
+	private ProposerErrorRepository errorRepo;
 
 	@Autowired
 	private EntityManager entityManager;
@@ -644,33 +647,11 @@ public class ProposerServiceImpl implements ProposerService {
 	@Override
 	public String exportProposersToExcel() throws FileNotFoundException, IOException {
 
-		//List<Proposer> allProposers = proposerRepo.findAllByStatus("y");
-
 		XSSFWorkbook workbook = new XSSFWorkbook();
 
 		XSSFSheet sheet = workbook.createSheet("Proposer_Data");
 
 		XSSFRow headerRow = sheet.createRow(0);
-
-//		headerRow.createCell(0).setCellValue("Proposer ID");
-//		headerRow.createCell(1).setCellValue("Title");
-//		headerRow.createCell(2).setCellValue("First Name");
-//		headerRow.createCell(3).setCellValue("Middle Name");
-//		headerRow.createCell(4).setCellValue("Last Name");
-//		headerRow.createCell(5).setCellValue("Gender");
-//		headerRow.createCell(6).setCellValue("Date of Birth");
-//		headerRow.createCell(7).setCellValue("PAN Number");
-//		headerRow.createCell(8).setCellValue("Aadhar Number");
-//		headerRow.createCell(9).setCellValue("Status");
-//		headerRow.createCell(10).setCellValue("Email");
-//		headerRow.createCell(11).setCellValue("Mobile No");
-//		headerRow.createCell(12).setCellValue("Alternate Mobile No");
-//		headerRow.createCell(13).setCellValue("Address Line 1");
-//		headerRow.createCell(14).setCellValue("Address Line 2");
-//		headerRow.createCell(15).setCellValue("Address Line 3");
-//		headerRow.createCell(16).setCellValue("Pincode");
-//		headerRow.createCell(17).setCellValue("City");
-//		headerRow.createCell(18).setCellValue("State");
 
 		String[] headers = { "proposer_id", "proposer_title", "first_name", "middle_name", "last_name", "gender",
 				"date_of_birth", "pan_number", "aadhar_number", "active_status", "email", "mobile_no",
@@ -680,43 +661,8 @@ public class ProposerServiceImpl implements ProposerService {
 			headerRow.createCell(i).setCellValue(headers[i]);
 		}
 
-//		int rowIndex = 1;
-//
-//		for (Proposer proposer : allProposers) {
-//			
-//			Row row = sheet.createRow(rowIndex++);
-//			
-//			row.createCell(0).setCellValue(proposer.getProposerId());
-//			row.createCell(1).setCellValue(proposer.getProposerTitle().toString());
-//			row.createCell(2).setCellValue(proposer.getFirstName());
-//			row.createCell(3).setCellValue(proposer.getMiddleName());
-//			row.createCell(4).setCellValue(proposer.getLastName());
-//			row.createCell(5).setCellValue(proposer.getGender().toString());
-//			row.createCell(6).setCellValue(proposer.getDateOfBirth().toString());
-//			row.createCell(7).setCellValue(proposer.getPanNumber());
-//			row.createCell(8).setCellValue(proposer.getAadharNo());
-//			row.createCell(9).setCellValue(proposer.getStatus());
-//			row.createCell(10).setCellValue(proposer.getEmail());
-//			row.createCell(11).setCellValue(proposer.getMobileNo());
-//			row.createCell(12).setCellValue(proposer.getAlternateMobNo());
-//			row.createCell(13).setCellValue(proposer.getAddressLine1());
-//			row.createCell(14).setCellValue(proposer.getAddressLine2());
-//			row.createCell(15).setCellValue(proposer.getAddressLine3());
-//			row.createCell(16).setCellValue(proposer.getPincode());
-//			row.createCell(17).setCellValue(proposer.getCity());
-//			row.createCell(18).setCellValue(proposer.getState());
-//		}
-
-//		try(FileOutputStream fileOutput=new FileOutputStream(filePath))
-//		{
-//			workbook.write(fileOutput);
-//		}
-
 		String SystemPath = "C:/ExcelFiles";
 		new File(SystemPath).mkdirs();
-
-//	    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
-//	    String formattedDateTime = LocalDateTime.now().format(formatter);
 
 		String fileName = "Proposer_Data_" + UUID.randomUUID().toString().substring(0, 4) + ".xlsx";
 		String filepath = SystemPath + "/" + fileName;
@@ -727,53 +673,317 @@ public class ProposerServiceImpl implements ProposerService {
 		workbook.close();
 
 		return filepath;
-
-//		ServletOutputStream output=response.getOutputStream();
-//		workbook.write(output);
-//		workbook.close();
-//		output.close();
 	}
 
 	@Override
 	public void importFromExcel(MultipartFile file) throws IOException {
-		List<Proposer> proposer = new ArrayList<>();
-		
+		List<Proposer> newProposer = new ArrayList<>();
+		List<String> responseErrors = new ArrayList<>();
+		List<ProposersError> dbErrors = new ArrayList<>();
+
 		XSSFWorkbook workbook = new XSSFWorkbook(file.getInputStream());
+		XSSFSheet sheet = workbook.getSheet("Proposer_Data");
 
-		XSSFSheet sheet = workbook.getSheet("Proposr_Data");
-		
 		for (int i = 1; i <= sheet.getLastRowNum(); i++) {
-
 			Row row = sheet.getRow(i);
 
 			if (row == null)
 				continue;
 
-			Proposer p = new Proposer();
-		
-			p.setProposerTitle(ProposerTitle.valueOf(row.getCell(1).getStringCellValue()));
-			p.setFirstName(row.getCell(2).getStringCellValue());
-			p.setMiddleName(row.getCell(3).getStringCellValue());
-			p.setLastName(row.getCell(4).getStringCellValue());
-			p.setGender(Gender.valueOf(row.getCell(5).getStringCellValue()));
-			p.setDateOfBirth((Date)row.getCell(6).getDateCellValue());
-			p.setPanNumber(row.getCell(7).getStringCellValue());
-			p.setAadharNo((long) row.getCell(8).getNumericCellValue());
-			p.setStatus(row.getCell(9).getStringCellValue());
-			p.setEmail(row.getCell(10).getStringCellValue());
-			p.setMobileNo((long) row.getCell(11).getNumericCellValue());
-			p.setAlternateMobNo((long) row.getCell(12).getNumericCellValue());
-			p.setAddressLine1(row.getCell(13).getStringCellValue());
-			p.setAddressLine2(row.getCell(14).getStringCellValue());
-			p.setAddressLine3(row.getCell(15).getStringCellValue());
-			p.setPincode((long) row.getCell(16).getNumericCellValue());
-			p.setCity(row.getCell(17).getStringCellValue());
-			p.setState(row.getCell(18).getStringCellValue());
+			Proposer proposers = new Proposer();
 
-			proposer.add(p);
+			String title = row.getCell(1).getStringCellValue().trim();
+			if (title.isEmpty()) {
+				ProposersError newError = new ProposersError();
+
+				newError.setErrorField("title");
+				newError.setErrorMessage("Invalid or missing title at row " + (i + 1));
+				newError.setStatus("Failed");
+				dbErrors.add(newError);
+				responseErrors.add("Title is missing at row " + (i + 1));
+			} else {
+				proposers.setProposerTitle(ProposerTitle.valueOf(title));
+			}
+
+			String firstName = row.getCell(2).getStringCellValue().trim();
+			if (firstName.isEmpty()) {
+				ProposersError newError = new ProposersError();
+
+				newError.setErrorField("firstName");
+				newError.setErrorMessage("Invalid or missing firstName at row " + (i + 1));
+				newError.setStatus("Failed");
+				dbErrors.add(newError);
+				responseErrors.add("First name is missing at row " + (i + 1));
+			} else {
+				proposers.setFirstName(firstName);
+			}
+
+			String middleName = row.getCell(3).getStringCellValue().trim();
+			if (middleName.isEmpty()) {
+				ProposersError newError = new ProposersError();
+
+				newError.setErrorField("middleName");
+				newError.setErrorMessage("Invalid or missing middleName at row " + (i + 1));
+				newError.setStatus("Failed");
+				dbErrors.add(newError);
+				responseErrors.add("Middle name is missing at row " + (i + 1));
+			} else {
+				proposers.setMiddleName(middleName);
+			}
+
+			String lastName = row.getCell(4).getStringCellValue().trim();
+			if (lastName.isEmpty()) {
+				ProposersError newError = new ProposersError();
+
+				newError.setErrorField("lastName");
+				newError.setErrorMessage("Invalid or missing lastName at row " + (i + 1));
+				newError.setStatus("Failed");
+				dbErrors.add(newError);
+				responseErrors.add("Last name is missing at row " + (i + 1));
+			} else {
+				proposers.setLastName(lastName);
+			}
+
+			String gender = row.getCell(5).getStringCellValue().trim();
+			if (gender.isEmpty()) {
+				ProposersError newError = new ProposersError();
+
+				newError.setErrorField("gender");
+				newError.setErrorMessage("Invalid or missing gender at row " + (i + 1));
+				newError.setStatus("Failed");
+				dbErrors.add(newError);
+				responseErrors.add("Gender is missing at row " + (i + 1));
+			} else {
+				proposers.setGender(Gender.valueOf(gender));
+			}
+
+			if (row.getCell(6) == null || row.getCell(6).getDateCellValue() == null) {
+				ProposersError newError = new ProposersError();
+
+				newError.setErrorField("DATE");
+				newError.setErrorMessage("Invalid or missing date at row " + (i + 1));
+				newError.setStatus("Failed");
+				dbErrors.add(newError);
+				responseErrors.add("Date of birth is missing at row " + (i + 1));
+			} else {
+				proposers.setDateOfBirth(row.getCell(6).getDateCellValue());
+			}
+
+			String pan = row.getCell(7).getStringCellValue().trim();
+			if (pan.isEmpty()) {
+				ProposersError newError = new ProposersError();
+
+				newError.setErrorField("pan");
+				newError.setErrorMessage("Invalid or missing pan at row " + (i + 1));
+				newError.setStatus("Failed");
+				dbErrors.add(newError);
+				responseErrors.add("PAN number is missing at row " + (i + 1));
+			} else {
+				proposers.setPanNumber(pan);
+			}
+
+			long aadhar = (long) row.getCell(8).getNumericCellValue();
+			if (String.valueOf(aadhar).length() != 12) {
+				ProposersError newError = new ProposersError();
+
+				newError.setErrorField("aadhar");
+				newError.setErrorMessage("Invalid or missing aadhar at row " + (i + 1));
+				newError.setStatus("Failed");
+				dbErrors.add(newError);
+				responseErrors.add("Invalid Aadhar number at row " + (i + 1));
+			} else {
+				proposers.setAadharNo(aadhar);
+			}
+
+			String status = row.getCell(9).getStringCellValue().trim();
+			if (status.isEmpty()) {
+				ProposersError newError = new ProposersError();
+
+				newError.setErrorField("status");
+				newError.setErrorMessage("Invalid or missing status at row " + (i + 1));
+				newError.setStatus("Failed");
+				dbErrors.add(newError);
+				responseErrors.add("Status is missing at row " + (i + 1));
+			} else {
+				proposers.setStatus(status);
+			}
+
+			String email = row.getCell(10).getStringCellValue().trim();
+			if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+				ProposersError newError = new ProposersError();
+
+				newError.setErrorField("email");
+				newError.setErrorMessage("Invalid or missing email at row " + (i + 1));
+				newError.setStatus("Failed");
+				dbErrors.add(newError);
+				responseErrors.add("Invalid email at row " + (i + 1));
+			} else {
+				proposers.setEmail(email);
+			}
+
+			long mobileNo = (long) row.getCell(11).getNumericCellValue();
+			if (String.valueOf(mobileNo).length() != 10) {
+				ProposersError newError = new ProposersError();
+
+				newError.setErrorField("mobileNo");
+				newError.setErrorMessage("Invalid or missing mobileNo at row " + (i + 1));
+				newError.setStatus("Failed");
+				dbErrors.add(newError);
+				responseErrors.add("Invalid mobile number at row " + (i + 1));
+			} else {
+				proposers.setMobileNo(mobileNo);
+			}
+
+			long alternateMobNo = (long) row.getCell(12).getNumericCellValue();
+			if (String.valueOf(alternateMobNo).length() != 10) {
+				ProposersError newError = new ProposersError();
+
+				newError.setErrorField("alternateMobNo");
+				newError.setErrorMessage("Invalid or missing alternateMobNo at row " + (i + 1));
+				newError.setStatus("Failed");
+				dbErrors.add(newError);
+				responseErrors.add("Invalid alternate number at row " + (i + 1));
+			} else {
+				proposers.setAlternateMobNo(alternateMobNo);
+			}
+
+			String address1 = row.getCell(13).getStringCellValue().trim();
+			if (address1.isEmpty()) {
+				ProposersError newError = new ProposersError();
+
+				newError.setErrorField("address1");
+				newError.setErrorMessage("Invalid or missing address1 at row " + (i + 1));
+				newError.setStatus("Failed");
+				dbErrors.add(newError);
+				responseErrors.add("Address Line 1 is missing at row " + (i + 1));
+			} else {
+				proposers.setAddressLine1(address1);
+			}
+
+			String address2 = row.getCell(14).getStringCellValue().trim();
+			if (address2.isEmpty()) {
+				ProposersError newError = new ProposersError();
+
+				newError.setErrorField("address2");
+				newError.setErrorMessage("Invalid or missing address2 at row " + (i + 1));
+				newError.setStatus("Failed");
+				dbErrors.add(newError);
+				responseErrors.add("Address Line 2 is missing at row " + (i + 1));
+			} else {
+				proposers.setAddressLine2(address2);
+			}
+
+			String address3 = row.getCell(15).getStringCellValue().trim();
+			if (address3.isEmpty()) {
+				ProposersError newError = new ProposersError();
+
+				newError.setErrorField("address3");
+				newError.setErrorMessage("Invalid or missing address3 at row " + (i + 1));
+				newError.setStatus("Failed");
+				dbErrors.add(newError);
+				responseErrors.add("Address Line 3 is missing at row " + (i + 1));
+			} else {
+				proposers.setAddressLine3(address3);
+			}
+
+			long pincode = (long) row.getCell(16).getNumericCellValue();
+			if (String.valueOf(pincode).length() != 6) {
+				ProposersError newError = new ProposersError();
+
+				newError.setErrorField("pincode");
+				newError.setErrorMessage("Invalid or missing pincode at row " + (i + 1));
+				newError.setStatus("Failed");
+				dbErrors.add(newError);
+				responseErrors.add("Invalid pincode at row " + (i + 1));
+			} else {
+				proposers.setPincode(pincode);
+			}
+
+			String city = row.getCell(17).getStringCellValue().trim();
+			if (city.isEmpty()) {
+				ProposersError newError = new ProposersError();
+
+				newError.setErrorField("city");
+				newError.setErrorMessage("Invalid or missing city at row " + (i + 1));
+				newError.setStatus("Failed");
+				dbErrors.add(newError);
+				responseErrors.add("City is missing at row " + (i + 1));
+			} else {
+				proposers.setCity(city);
+			}
+
+			String state = row.getCell(18).getStringCellValue().trim();
+			if (state.isEmpty()) {
+				ProposersError newError = new ProposersError();
+
+				newError.setErrorField("state");
+				newError.setErrorMessage("Invalid or missing state at row " + (i + 1));
+				newError.setStatus("Failed");
+				dbErrors.add(newError);
+				responseErrors.add("State is missing at row " + (i + 1));
+			} else {
+				proposers.setState(state);
+			}
+
+			if (responseErrors.isEmpty()) {
+				newProposer.add(proposers);
+			}
 		}
 		workbook.close();
-		proposerRepo.saveAll(proposer);
+
+		if (!responseErrors.isEmpty()) {
+			errorRepo.saveAll(dbErrors);
+			//throw new RuntimeException("Validation failed: " + String.join(", ", responseErrors));
+		}
+		  
+		proposerRepo.saveAll(newProposer);
 	}
+
 	
+	@Override
+	public void getDBDataToExcel(OutputStream outputStream) throws IOException {
+
+		List<Proposer> allProposers = proposerRepo.findAllByStatus("y");
+
+		XSSFWorkbook workbook = new XSSFWorkbook();
+		XSSFSheet sheet = workbook.createSheet("ProposerDB_Data");
+
+		XSSFRow headerRow = sheet.createRow(0);
+
+		String[] headers = { "proposer_id", "proposer_title", "first_name", "middle_name", "last_name", "gender",
+				"date_of_birth", "pan_number", "aadhar_number", "active_status", "email", "mobile_no",
+				"alternate_mobile_number", "addressLine1", "addressLine2", "addressLine3", "pincode", "city", "state" };
+
+		for (int i = 0; i < headers.length; i++) {
+			headerRow.createCell(i).setCellValue(headers[i]);
+		}
+
+		int rowIndex = 1;
+		for (Proposer proposer : allProposers) {
+			Row row = sheet.createRow(rowIndex++);
+			row.createCell(0).setCellValue(proposer.getProposerId());
+			row.createCell(1).setCellValue(proposer.getProposerTitle().toString());
+			row.createCell(2).setCellValue(proposer.getFirstName());
+			row.createCell(3).setCellValue(proposer.getMiddleName());
+			row.createCell(4).setCellValue(proposer.getLastName());
+			row.createCell(5).setCellValue(proposer.getGender().toString());
+			row.createCell(6).setCellValue(proposer.getDateOfBirth().toString());
+			row.createCell(7).setCellValue(proposer.getPanNumber());
+			row.createCell(8).setCellValue(proposer.getAadharNo());
+			row.createCell(9).setCellValue(proposer.getStatus());
+			row.createCell(10).setCellValue(proposer.getEmail());
+			row.createCell(11).setCellValue(proposer.getMobileNo());
+			row.createCell(12).setCellValue(proposer.getAlternateMobNo());
+			row.createCell(13).setCellValue(proposer.getAddressLine1());
+			row.createCell(14).setCellValue(proposer.getAddressLine2());
+			row.createCell(15).setCellValue(proposer.getAddressLine3());
+			row.createCell(16).setCellValue(proposer.getPincode());
+			row.createCell(17).setCellValue(proposer.getCity());
+			row.createCell(18).setCellValue(proposer.getState());
+		}
+
+		workbook.write(outputStream);
+		workbook.close();
+	}
+
 }

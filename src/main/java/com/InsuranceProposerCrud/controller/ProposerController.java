@@ -23,6 +23,8 @@ import com.InsuranceProposerCrud.request.ResponseDto;
 import com.InsuranceProposerCrud.response.ResponseHandler;
 import com.InsuranceProposerCrud.service.ProposerService;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 import org.springframework.web.bind.annotation.PutMapping;
 
 @RestController
@@ -274,7 +276,7 @@ public class ProposerController {
 	public ResponseHandler exportProposersToExcel() {
 		ResponseHandler handler = new ResponseHandler();
 		try {
-			String filePath = proposerService.exportProposersToExcel(); // returns path
+			String filePath = proposerService.exportProposersToExcel();
 			handler.setData(filePath);
 			handler.setStatus(true);
 			handler.setMessage("File generated successfully");
@@ -289,16 +291,38 @@ public class ProposerController {
 
 	@PostMapping(value = "/excelFileImport", consumes = "multipart/form-data")
 	public ResponseHandler importDataToDB(@RequestParam("file") MultipartFile file) {
-	    ResponseHandler handler = new ResponseHandler();
-	    try {
-	        proposerService.importFromExcel(file);  
-	        handler.setStatus(true);
-	        handler.setMessage("File imported successfully");
-	    } catch (IOException e) {
-	        handler.setStatus(false);
-	        handler.setMessage("Failed to import file: " + e.getMessage());
-	    }
-	    return handler;
+		ResponseHandler handler = new ResponseHandler();
+		try {
+			proposerService.importFromExcel(file);
+			handler.setStatus(true);
+			handler.setMessage("File imported successfully");
+		} catch (RuntimeException e) {
+
+			handler.setStatus(false);
+			handler.setMessage("Validation error in Excel file");
+			handler.setErrors(List.of(e.getMessage())); // Attach validation errors from the exception
+
+		} catch (IOException e) {
+			// If there is an IOException (e.g., file issues)
+			handler.setStatus(false);
+			handler.setMessage("Failed to import file: " + e.getMessage());
+
+		 }
+		return handler;
 	}
 
+	@GetMapping("/getDBDataToExcel")
+	public void getDBDataToExcel(HttpServletResponse response) {
+
+		try {
+			response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+			response.setHeader("Content-Disposition", "attachment; filename=Proposer_Data.xlsx");
+
+			proposerService.getDBDataToExcel(response.getOutputStream());
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		}
+	}
 }

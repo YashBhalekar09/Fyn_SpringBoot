@@ -2,6 +2,7 @@ package com.InsuranceProposerCrud.service;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -15,6 +16,7 @@ import com.InsuranceProposerCrud.request.RequestDto;
 import com.InsuranceProposerCrud.request.ResponseDto;
 
 import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletResponse;
 
 public interface ProposerService {
@@ -48,5 +50,7 @@ public interface ProposerService {
 	
 	public void importFromExcel(MultipartFile file) throws IOException;
 
+	void getDBDataToExcel(OutputStream out) throws IOException;
 
+	
 }
