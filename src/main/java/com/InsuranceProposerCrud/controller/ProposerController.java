@@ -300,7 +300,7 @@ public class ProposerController {
 
 			handler.setStatus(false);
 			handler.setMessage("Validation error in Excel file");
-			handler.setErrors(List.of(e.getMessage())); // Attach validation errors from the exception
+			handler.setErrors(List.of(e.getMessage())); 
 
 		} catch (IOException e) {
 			// If there is an IOException (e.g., file issues)
@@ -326,3 +326,268 @@ public class ProposerController {
 		}
 	}
 }
+
+//@Override
+//public void importFromExcel(MultipartFile file) throws IOException {
+//	List<Proposer> newProposer = new ArrayList<>();
+//	List<String> responseErrors = new ArrayList<>();
+//	List<ProposersError> dbErrors = new ArrayList<>();
+//
+//	XSSFWorkbook workbook = new XSSFWorkbook(file.getInputStream());
+//	XSSFSheet sheet = workbook.getSheet("Proposer_Data");
+//
+//	for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+//		Row row = sheet.getRow(i);
+//
+//		if (row == null)
+//			continue;
+//
+//		Proposer proposers = new Proposer();
+//
+//		String title = row.getCell(1).getStringCellValue().trim();
+//		if (title.isEmpty()) {
+//			ProposersError newError = new ProposersError();
+//
+//			newError.setErrorField("title");
+//			newError.setErrorMessage("Invalid or missing title at row " + (i + 1));
+//			newError.setStatus("Failed");
+//			dbErrors.add(newError);
+//			responseErrors.add("Title is missing at row " + (i + 1));
+//		} else {
+//			proposers.setProposerTitle(ProposerTitle.valueOf(title));
+//		}
+//
+//		String firstName = row.getCell(2).getStringCellValue().trim();
+//		if (firstName.isEmpty()) {
+//			ProposersError newError = new ProposersError();
+//
+//			newError.setErrorField("firstName");
+//			newError.setErrorMessage("Invalid or missing firstName at row " + (i + 1));
+//			newError.setStatus("Failed");
+//			dbErrors.add(newError);
+//			responseErrors.add("First name is missing at row " + (i + 1));
+//		} else {
+//			proposers.setFirstName(firstName);
+//		}
+//
+//		String middleName = row.getCell(3).getStringCellValue().trim();
+//		if (middleName.isEmpty()) {
+//			ProposersError newError = new ProposersError();
+//
+//			newError.setErrorField("middleName");
+//			newError.setErrorMessage("Invalid or missing middleName at row " + (i + 1));
+//			newError.setStatus("Failed");
+//			dbErrors.add(newError);
+//			responseErrors.add("Middle name is missing at row " + (i + 1));
+//		} else {
+//			proposers.setMiddleName(middleName);
+//		}
+//
+//		String lastName = row.getCell(4).getStringCellValue().trim();
+//		if (lastName.isEmpty()) {
+//			ProposersError newError = new ProposersError();
+//
+//			newError.setErrorField("lastName");
+//			newError.setErrorMessage("Invalid or missing lastName at row " + (i + 1));
+//			newError.setStatus("Failed");
+//			dbErrors.add(newError);
+//			responseErrors.add("Last name is missing at row " + (i + 1));
+//		} else {
+//			proposers.setLastName(lastName);
+//		}
+//
+//		String gender = row.getCell(5).getStringCellValue().trim();
+//		if (gender.isEmpty()) {
+//			ProposersError newError = new ProposersError();
+//
+//			newError.setErrorField("gender");
+//			newError.setErrorMessage("Invalid or missing gender at row " + (i + 1));
+//			newError.setStatus("Failed");
+//			dbErrors.add(newError);
+//			responseErrors.add("Gender is missing at row " + (i + 1));
+//		} else {
+//			proposers.setGender(Gender.valueOf(gender));
+//		}
+//
+//		if (row.getCell(6) == null || row.getCell(6).getDateCellValue() == null) {
+//			ProposersError newError = new ProposersError();
+//
+//			newError.setErrorField("DATE");
+//			newError.setErrorMessage("Invalid or missing date at row " + (i + 1));
+//			newError.setStatus("Failed");
+//			dbErrors.add(newError);
+//			responseErrors.add("Date of birth is missing at row " + (i + 1));
+//		} else {
+//			proposers.setDateOfBirth(row.getCell(6).getDateCellValue());
+//		}
+//
+//		String pan = row.getCell(7).getStringCellValue().trim();
+//		if (pan.isEmpty()) {
+//			ProposersError newError = new ProposersError();
+//
+//			newError.setErrorField("pan");
+//			newError.setErrorMessage("Invalid or missing pan at row " + (i + 1));
+//			newError.setStatus("Failed");
+//			dbErrors.add(newError);
+//			responseErrors.add("PAN number is missing at row " + (i + 1));
+//		} else {
+//			proposers.setPanNumber(pan);
+//		}
+//
+//		long aadhar = (long) row.getCell(8).getNumericCellValue();
+//		if (String.valueOf(aadhar).length() != 12) {
+//			ProposersError newError = new ProposersError();
+//
+//			newError.setErrorField("aadhar");
+//			newError.setErrorMessage("Invalid or missing aadhar at row " + (i + 1));
+//			newError.setStatus("Failed");
+//			dbErrors.add(newError);
+//			responseErrors.add("Invalid Aadhar number at row " + (i + 1));
+//		} else {
+//			proposers.setAadharNo(aadhar);
+//		}
+//
+//		String status = row.getCell(9).getStringCellValue().trim();
+//		if (status.isEmpty()) {
+//			ProposersError newError = new ProposersError();
+//
+//			newError.setErrorField("status");
+//			newError.setErrorMessage("Invalid or missing status at row " + (i + 1));
+//			newError.setStatus("Failed");
+//			dbErrors.add(newError);
+//			responseErrors.add("Status is missing at row " + (i + 1));
+//		} else {
+//			proposers.setStatus(status);
+//		}
+//
+//		String email = row.getCell(10).getStringCellValue().trim();
+//		if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+//			ProposersError newError = new ProposersError();
+//
+//			newError.setErrorField("email");
+//			newError.setErrorMessage("Invalid or missing email at row " + (i + 1));
+//			newError.setStatus("Failed");
+//			dbErrors.add(newError);
+//			responseErrors.add("Invalid email at row " + (i + 1));
+//		} else {
+//			proposers.setEmail(email);
+//		}
+//
+//		long mobileNo = (long) row.getCell(11).getNumericCellValue();
+//		if (String.valueOf(mobileNo).length() != 10) {
+//			ProposersError newError = new ProposersError();
+//
+//			newError.setErrorField("mobileNo");
+//			newError.setErrorMessage("Invalid or missing mobileNo at row " + (i + 1));
+//			newError.setStatus("Failed");
+//			dbErrors.add(newError);
+//			responseErrors.add("Invalid mobile number at row " + (i + 1));
+//		} else {
+//			proposers.setMobileNo(mobileNo);
+//		}
+//
+//		long alternateMobNo = (long) row.getCell(12).getNumericCellValue();
+//		if (String.valueOf(alternateMobNo).length() != 10) {
+//			ProposersError newError = new ProposersError();
+//
+//			newError.setErrorField("alternateMobNo");
+//			newError.setErrorMessage("Invalid or missing alternateMobNo at row " + (i + 1));
+//			newError.setStatus("Failed");
+//			dbErrors.add(newError);
+//			responseErrors.add("Invalid alternate number at row " + (i + 1));
+//		} else {
+//			proposers.setAlternateMobNo(alternateMobNo);
+//		}
+//
+//		String address1 = row.getCell(13).getStringCellValue().trim();
+//		if (address1.isEmpty()) {
+//			ProposersError newError = new ProposersError();
+//
+//			newError.setErrorField("address1");
+//			newError.setErrorMessage("Invalid or missing address1 at row " + (i + 1));
+//			newError.setStatus("Failed");
+//			dbErrors.add(newError);
+//			responseErrors.add("Address Line 1 is missing at row " + (i + 1));
+//		} else {
+//			proposers.setAddressLine1(address1);
+//		}
+//
+//		String address2 = row.getCell(14).getStringCellValue().trim();
+//		if (address2.isEmpty()) {
+//			ProposersError newError = new ProposersError();
+//
+//			newError.setErrorField("address2");
+//			newError.setErrorMessage("Invalid or missing address2 at row " + (i + 1));
+//			newError.setStatus("Failed");
+//			dbErrors.add(newError);
+//			responseErrors.add("Address Line 2 is missing at row " + (i + 1));
+//		} else {
+//			proposers.setAddressLine2(address2);
+//		}
+//
+//		String address3 = row.getCell(15).getStringCellValue().trim();
+//		if (address3.isEmpty()) {
+//			ProposersError newError = new ProposersError();
+//
+//			newError.setErrorField("address3");
+//			newError.setErrorMessage("Invalid or missing address3 at row " + (i + 1));
+//			newError.setStatus("Failed");
+//			dbErrors.add(newError);
+//			responseErrors.add("Address Line 3 is missing at row " + (i + 1));
+//		} else {
+//			proposers.setAddressLine3(address3);
+//		}
+//
+//		long pincode = (long) row.getCell(16).getNumericCellValue();
+//		if (String.valueOf(pincode).length() != 6) {
+//			ProposersError newError = new ProposersError();
+//
+//			newError.setErrorField("pincode");
+//			newError.setErrorMessage("Invalid or missing pincode at row " + (i + 1));
+//			newError.setStatus("Failed");
+//			dbErrors.add(newError);
+//			responseErrors.add("Invalid pincode at row " + (i + 1));
+//		} else {
+//			proposers.setPincode(pincode);
+//		}
+//
+//		String city = row.getCell(17).getStringCellValue().trim();
+//		if (city.isEmpty()) {
+//			ProposersError newError = new ProposersError();
+//
+//			newError.setErrorField("city");
+//			newError.setErrorMessage("Invalid or missing city at row " + (i + 1));
+//			newError.setStatus("Failed");
+//			dbErrors.add(newError);
+//			responseErrors.add("City is missing at row " + (i + 1));
+//		} else {
+//			proposers.setCity(city);
+//		}
+//
+//		String state = row.getCell(18).getStringCellValue().trim();
+//		if (state.isEmpty()) {
+//			ProposersError newError = new ProposersError();
+//
+//			newError.setErrorField("state");
+//			newError.setErrorMessage("Invalid or missing state at row " + (i + 1));
+//			newError.setStatus("Failed");
+//			dbErrors.add(newError);
+//			responseErrors.add("State is missing at row " + (i + 1));
+//		} else {
+//			proposers.setState(state);
+//		}
+//
+//		if (responseErrors.isEmpty()) {
+//			newProposer.add(proposers);
+//		}
+//	}
+//	workbook.close();
+//
+//	if (!responseErrors.isEmpty()) {
+//		errorRepo.saveAll(dbErrors);
+//		//throw new RuntimeException("Validation failed: " + String.join(", ", responseErrors));
+//	}
+//	  
+//	proposerRepo.saveAll(newProposer);
+//}
+

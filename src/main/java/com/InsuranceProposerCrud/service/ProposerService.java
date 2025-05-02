@@ -48,9 +48,13 @@ public interface ProposerService {
 
 	public String  exportProposersToExcel() throws FileNotFoundException, IOException;
 	
-	public void importFromExcel(MultipartFile file) throws IOException;
+	public String importFromExcel(MultipartFile file) throws IOException;
 
 	void getDBDataToExcel(OutputStream out) throws IOException;
+
+	
+
+	
 
 	
 }

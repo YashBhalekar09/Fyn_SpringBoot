@@ -26,6 +26,12 @@ public interface ProposerRepository extends JpaRepository<Proposer, Integer>{
 	Optional<Proposer> findByMobileNo(Long mobileNo);
 
 	public List<Proposer> findAllByStatus(String status);
+	
+	boolean existsByEmail(String email);
+	boolean existsByMobileNo(Long mobileNo);
+	boolean existsByPanNumber(String panNumber);
+	boolean existsByAadharNo(Long aadharNo);
+	
 
 }
 

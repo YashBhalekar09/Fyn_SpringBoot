@@ -24,6 +24,17 @@ public class ProposersError {
 
 	@Column(name = "error_status")
 	private String status;
+	
+	@Column(name = "row_number")
+	private Integer rowNumber;
+
+	public Integer getRowNumber() {
+		return rowNumber;
+	}
+
+	public void setRowNumber(Integer rowNumber) {
+		this.rowNumber = rowNumber;
+	}
 
 	public Integer getErrorId() {
 		return errorId;
