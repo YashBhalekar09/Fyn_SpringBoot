@@ -685,6 +685,8 @@ public class ProposerServiceImpl implements ProposerService {
 		Sheet sheet = workbook.getSheetAt(0);
 
 		List<String> responseErrors = new ArrayList<>();
+		
+		List<ProposersError> currentFileErrors = new ArrayList<>();
 
 		for (int i = 1; i <= sheet.getLastRowNum(); i++) {
 
@@ -776,12 +778,10 @@ public class ProposerServiceImpl implements ProposerService {
 				fieldNames.add("Email Id");
 			} else {
 				String emailStr = email.getStringCellValue().trim();
-				if (!emailStr.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$")) 
-				{
+				if (!emailStr.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$")) {
 					errorFields.add("Email Id is invalid");
 					fieldNames.add("Email Id");
-				} else if (proposerRepo.existsByEmail(emailStr)) 
-				{
+				} else if (proposerRepo.existsByEmail(emailStr)) {
 					errorFields.add("Email Id already exists in database");
 					fieldNames.add("Email Id");
 				}
@@ -798,8 +798,7 @@ public class ProposerServiceImpl implements ProposerService {
 				if (mobileStr.length() != 10 || !mobileStr.matches("[6-9][0-9]{9}")) {
 					errorFields.add("Mobile Number is invalid (must be 10 digits)");
 					fieldNames.add("Mobile Number");
-				} else if (proposerRepo.existsByMobileNo(Long.parseLong(mobileStr))) 
-				{
+				} else if (proposerRepo.existsByMobileNo(Long.parseLong(mobileStr))) {
 					errorFields.add("Mobile number already exists in database");
 					fieldNames.add("Mobile number");
 				}
@@ -850,6 +849,8 @@ public class ProposerServiceImpl implements ProposerService {
 				fieldNames.add("State");
 			}
 
+			// rowcount = sheet.getLastRowNum();
+
 			if (!errorFields.isEmpty()) {
 				for (int j = 0; j < errorFields.size(); j++) {
 					ProposersError error = new ProposersError();
@@ -857,6 +858,7 @@ public class ProposerServiceImpl implements ProposerService {
 					error.setErrorField(fieldNames.get(j));
 					error.setStatus("Failed");
 					error.setRowNumber(i);
+					currentFileErrors.add(error);
 					errorRepo.save(error);
 				}
 
@@ -890,6 +892,7 @@ public class ProposerServiceImpl implements ProposerService {
 				if (altMobileNumber != null) {
 					proposer.setAlternateMobNo((long) altMobileNumber.getNumericCellValue());
 				}
+
 				proposer.setAddressLine1(address1.getStringCellValue().trim());
 				if (address2 != null) {
 					proposer.setAddressLine2(address2.getStringCellValue().trim());
@@ -919,6 +922,46 @@ public class ProposerServiceImpl implements ProposerService {
 		}
 
 		workbook.close();
+
+		if (!currentFileErrors.isEmpty()) {
+			XSSFWorkbook errorWorkbook = new XSSFWorkbook();
+			XSSFSheet errorsheet = errorWorkbook.createSheet("Error_sheet");
+
+			Row header = errorsheet.createRow(0);
+			
+//			header.createCell(0).setCellValue("Error Field");
+//			header.createCell(1).setCellValue("Error Message");
+//			header.createCell(2).setCellValue("Error Status");
+//			header.createCell(3).setCellValue("Row Number");
+
+			
+			String[] headers = { "Error Field", "Error Message", "Error Status", "Row Number" };
+
+			for (int i = 0; i < headers.length; i++) {
+				header.createCell(i).setCellValue(headers[i]);
+			}
+
+			int rowIndex = 1;
+			
+			for (ProposersError err : currentFileErrors) {
+				Row errRow = errorsheet.createRow(rowIndex++);
+				errRow.createCell(0).setCellValue(err.getErrorField());
+				errRow.createCell(1).setCellValue(err.getErrorMessage());
+				errRow.createCell(2).setCellValue(err.getStatus());
+				errRow.createCell(3).setCellValue(err.getRowNumber());
+			}
+
+			String fileName = "ValidationErrors_" + UUID.randomUUID().toString().substring(0, 4) + ".xlsx";
+			String errorPath = "C:/ErrorFiles/";
+			new File(errorPath).mkdirs();
+
+			FileOutputStream out = new FileOutputStream(errorPath + fileName);
+			errorWorkbook.write(out);
+			out.close();
+			errorWorkbook.close();
+
+			throw new RuntimeException("Validation failed. See error file: " + errorPath + fileName);
+		}
 
 		if (!responseErrors.isEmpty()) {
 			throw new RuntimeException("Validation failed: " + String.join(", ", responseErrors));
