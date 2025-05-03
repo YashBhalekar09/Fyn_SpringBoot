@@ -8,19 +8,33 @@ import com.InsuranceProposerCrud.enumclasses.ProposerTitle;
 
 public class ResponseDto {
 	private ProposerTitle proposerTitle;
+	
 	private Gender gender;
+	
 	private Date dateOfBirth;
+	
 	private String panNumber;
+	
 	private Long aadharNo;
+	
 	private String status;
+	
 	private String email;
+	
 	private Long mobileNo;
+	
 	private Long alternateMobNo;
+	
 	private String addressLine1;
+	
 	private String addressLine2;
+	
 	private String addressLine3;
+	
 	private Long pincode;
+	
 	private String city;
+	
 	private String state;
 
 	private String firstName;
@@ -30,9 +44,6 @@ public class ResponseDto {
 	private String lastName;
 
 	private List<NomineeDto> nomineeDetails;
-
-	
-	
 
 	public List<NomineeDto> getNomineeDetails() {
 		return nomineeDetails;

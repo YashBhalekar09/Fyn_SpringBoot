@@ -682,11 +682,12 @@ public class ProposerServiceImpl implements ProposerService {
 	public String importFromExcel(MultipartFile file) throws IOException {
 
 		Workbook workbook = new XSSFWorkbook(file.getInputStream());
+		
 		Sheet sheet = workbook.getSheetAt(0);
 
 		List<String> responseErrors = new ArrayList<>();
 		
-		List<ProposersError> currentFileErrors = new ArrayList<>();
+		List<ProposersError> currentFileErrors = new ArrayList<>(); //USE FOR ERROREXCEL
 
 		for (int i = 1; i <= sheet.getLastRowNum(); i++) {
 
@@ -849,22 +850,23 @@ public class ProposerServiceImpl implements ProposerService {
 				fieldNames.add("State");
 			}
 
-			// rowcount = sheet.getLastRowNum();
+		
 
 			if (!errorFields.isEmpty()) {
-				for (int j = 0; j < errorFields.size(); j++) {
+				for (int j = 0; j < errorFields.size(); j++) { //USE FOR STORE EACH RECORD WITH DIFFERNT ID
 					ProposersError error = new ProposersError();
 					error.setErrorMessage(errorFields.get(j));
 					error.setErrorField(fieldNames.get(j));
 					error.setStatus("Failed");
 					error.setRowNumber(i);
-					currentFileErrors.add(error);
+					currentFileErrors.add(error); //ERROREXCELFILE
 					errorRepo.save(error);
 				}
 
 				responseErrors.add("Row " + i + ": " + String.join(", ", errorFields));
 
 			} else {
+				
 				// Save to proposer table
 				Proposer proposer = new Proposer();
 				proposer.setProposerTitle(ProposerTitle.valueOf(row.getCell(1).getStringCellValue().trim()));
@@ -917,24 +919,19 @@ public class ProposerServiceImpl implements ProposerService {
 				successEntry.setErrorField("Save");
 				successEntry.setStatus("Success");
 				successEntry.setRowNumber(i);
+				currentFileErrors.add(successEntry); //SUCCESS DATA ALSO ADD IN ERROREXCEL
 				errorRepo.save(successEntry);
 			}
 		}
-
 		workbook.close();
 
+		//ERROREXCELFILE 
 		if (!currentFileErrors.isEmpty()) {
 			XSSFWorkbook errorWorkbook = new XSSFWorkbook();
 			XSSFSheet errorsheet = errorWorkbook.createSheet("Error_sheet");
 
 			Row header = errorsheet.createRow(0);
-			
-//			header.createCell(0).setCellValue("Error Field");
-//			header.createCell(1).setCellValue("Error Message");
-//			header.createCell(2).setCellValue("Error Status");
-//			header.createCell(3).setCellValue("Row Number");
-
-			
+		
 			String[] headers = { "Error Field", "Error Message", "Error Status", "Row Number" };
 
 			for (int i = 0; i < headers.length; i++) {
@@ -950,7 +947,7 @@ public class ProposerServiceImpl implements ProposerService {
 				errRow.createCell(2).setCellValue(err.getStatus());
 				errRow.createCell(3).setCellValue(err.getRowNumber());
 			}
-
+			
 			String fileName = "ValidationErrors_" + UUID.randomUUID().toString().substring(0, 4) + ".xlsx";
 			String errorPath = "C:/ErrorFiles/";
 			new File(errorPath).mkdirs();
