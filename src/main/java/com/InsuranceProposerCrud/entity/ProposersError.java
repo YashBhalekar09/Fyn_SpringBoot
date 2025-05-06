@@ -27,6 +27,18 @@ public class ProposersError {
 	
 	@Column(name = "row_number")
 	private Integer rowNumber;
+	
+	 @Column(name = "batch_id")
+	    private Integer batchId; 
+
+	
+	public Integer getBatchId() {
+		return batchId;
+	}
+
+	public void setBatchId(Integer batchId) {
+		this.batchId = batchId;
+	}
 
 	public Integer getRowNumber() {
 		return rowNumber;

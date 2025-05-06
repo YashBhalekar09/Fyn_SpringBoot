@@ -256,7 +256,7 @@ public class ProposerController {
 		try {
 			// Call the service to fetch the proposers based on the pagination filters
 			List<Proposer> proposers = proposerService.fetchAllProposersWithNomineesByJoin(pagination);
-
+			
 			// Calculate the total number of records for pagination
 			List<RequestDto> totalRecords = proposerService.listAllProposers();
 
@@ -295,9 +295,10 @@ public class ProposerController {
 	public ResponseHandler importDataToDB(@RequestParam("file") MultipartFile file) {
 		ResponseHandler handler = new ResponseHandler();
 		try {
-			proposerService.importFromExcel(file);
+			String batchProcessing = proposerService.batchProcessing(file);
+			handler.setData(batchProcessing);
 			handler.setStatus(true);
-			handler.setMessage("File imported successfully");
+			handler.setMessage("Success");
 		} catch (RuntimeException e) {
 
 			handler.setStatus(false);
