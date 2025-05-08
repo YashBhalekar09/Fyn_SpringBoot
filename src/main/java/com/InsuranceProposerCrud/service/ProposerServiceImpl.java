@@ -865,6 +865,9 @@ public class ProposerServiceImpl implements ProposerService {
 			if (!errorFields.isEmpty()) {
 				for (int j = 0; j < errorFields.size(); j++) {
 					ProposersError error = new ProposersError();
+
+//					 error.setErrorField(String.join(", ", fieldNames));
+//					    error.setErrorMessage(String.join("; ", errorFields));
 					error.setErrorMessage(errorFields.get(j));
 					error.setErrorField(fieldNames.get(j));
 					error.setStatus("Failed");
@@ -903,6 +906,8 @@ public class ProposerServiceImpl implements ProposerService {
 				ProposersError successEntry = new ProposersError();
 				successEntry.setErrorMessage("Proposer saved into DB, with ID: " + saved.getProposerId());
 				successEntry.setErrorField("Save");
+//				successEntry.setErrorField(String.join(", ", fieldNames));
+//				successEntry.setErrorMessage(String.join("; ", errorFields));
 				successEntry.setStatus("Success");
 				successEntry.setRowNumber(i);
 				currentFileErrors.add(successEntry);
@@ -966,10 +971,10 @@ public class ProposerServiceImpl implements ProposerService {
 		Workbook workbook = new XSSFWorkbook(file.getInputStream());
 		Sheet sheet = workbook.getSheetAt(0);
 
-		//new logic
+		// new logic
 		int totalRows = sheet.getLastRowNum();
-		int batchSize = 3;
-		
+		//int batchSize = 3;
+
 		if (totalRows > 5) {
 
 			String filePath = "C:/batchuploads/";
@@ -981,19 +986,20 @@ public class ProposerServiceImpl implements ProposerService {
 			try (FileOutputStream out = new FileOutputStream(fullFilePath)) {
 				workbook.write(out);
 			}
+			
 			BatchQueue queue = new BatchQueue();
 			queue.setFilePath(fullFilePath);
 			queue.setRowCount(totalRows);
 			queue.setRowRead(0);
 			queue.setStatus("n");
 			queue.setIsProcess("n");
-			queue.setLastProcessCount(batchSize);
+			//queue.setLastProcessCount(batchSize);
 			batchQueueRepo.save(queue);
 
 			workbook.close();
 			return "File queued for batch processing.";
 		}
-		//end
+		// end
 
 		List<String> responseErrors = new ArrayList<>();
 		List<ProposersError> currentFileErrors = new ArrayList<>();
@@ -1261,13 +1267,24 @@ public class ProposerServiceImpl implements ProposerService {
 			batchQueueRepo.save(batchQueue);
 
 			try {
-				Workbook workbook = new XSSFWorkbook(batchQueue.getFilePath());
+				FileInputStream fis=new FileInputStream(batchQueue.getFilePath());
+				Workbook workbook = new XSSFWorkbook(fis);
 
 				Sheet sheet = workbook.getSheetAt(0);
 				int rowStart = batchQueue.getRowRead() + 1;
 				System.out.println(rowStart);
 				int totalRows = batchQueue.getRowCount();
 				int batchSize = 3;
+				
+				Row headRow = sheet.getRow(0);
+				
+				if (rowStart == 1) {
+					int lastCol = headRow.getLastCellNum();
+
+					headRow.createCell(lastCol).setCellValue("Error Message");
+
+					headRow.createCell(lastCol + 1).setCellValue("Error Status");
+				}
 
 				List<ProposersError> currentFileErrors = new ArrayList<>();
 				List<String> responseErrors = new ArrayList<>();
@@ -1280,7 +1297,6 @@ public class ProposerServiceImpl implements ProposerService {
 					List<String> errorFields = new ArrayList<>();
 					List<String> fieldNames = new ArrayList<>();
 
-					
 					Cell title = row.getCell(1);
 					if (title == null || title.getStringCellValue().isEmpty()) {
 						errorFields.add("Title is missing");
@@ -1438,11 +1454,15 @@ public class ProposerServiceImpl implements ProposerService {
 							error.setErrorField(fieldNames.get(j));
 							error.setStatus("Failed");
 							error.setRowNumber(i);
-						
+
 							currentFileErrors.add(error);
 							errorRepo.save(error);
 						}
+						Cell errorMessage = row.createCell(headRow.getLastCellNum()-2);
+						Cell errorstatus = row.createCell(headRow.getLastCellNum() - 1);
 
+						errorMessage.setCellValue(String.join(", ", errorFields));
+						errorstatus.setCellValue("failed");
 						responseErrors.add("Row " + i + ": " + String.join(", ", errorFields));
 					} else {
 						// SAVE PROPOSER
@@ -1467,20 +1487,22 @@ public class ProposerServiceImpl implements ProposerService {
 						proposer.setState(state.getStringCellValue().trim());
 
 						Proposer saved = proposerRepo.save(proposer);
-
+						
 						ProposersError success = new ProposersError();
-						success.setBatchId(batchQueue.getQueid()); 
+						
+						success.setBatchId(batchQueue.getQueid());
 						success.setRowNumber(i);
 						success.setStatus("Success");
 						success.setErrorField("Save");
 						success.setErrorMessage("Saved with ID: " + saved.getProposerId());
-
-						currentFileErrors.add(success);  
+						currentFileErrors.add(success);
 						errorRepo.save(success);
-
 						
+						Cell errorMessage = row.createCell(headRow.getLastCellNum()-2);
+						Cell errorstatus = row.createCell(headRow.getLastCellNum() - 1);
 
-						
+						errorMessage.setCellValue(saved.getProposerId().toString());
+						errorstatus.setCellValue("success");
 
 					}
 					batchQueue.setRowRead(i);
@@ -1490,57 +1512,54 @@ public class ProposerServiceImpl implements ProposerService {
 				if (batchQueue.getRowRead() >= totalRows) {
 					batchQueue.setIsProcess("y");
 					batchQueue.setStatus("y");
-					
-					Workbook resultWorkbook = new XSSFWorkbook();
-					Sheet resultSheet = resultWorkbook.createSheet("Response Excel");
 
-					
-					Row row = sheet.getRow(0);
-					Row resultHeader = resultSheet.createRow(0);
-					int colCount = row.getLastCellNum();
-
-					
-					for (int i = 0; i < colCount; i++) {
-					    resultHeader.createCell(i).setCellValue(row.getCell(i).toString());
-					}
-
-					
-					resultHeader.createCell(colCount).setCellValue("Status");
-					resultHeader.createCell(colCount + 1).setCellValue("Error Message");
-
-					// Fetch all errors for this batch
-					List<ProposersError> allErrors = errorRepo.findByBatchId(batchQueue.getQueid());
-
-					int rowIndex = 1;
-					for (ProposersError error : allErrors) {
-					    int errorRowNum = error.getRowNumber();
-					    Row originalRow = sheet.getRow(errorRowNum);
-					    if (originalRow == null) continue;
-
-					  
-					    Row resultRow = resultSheet.createRow(rowIndex++);
-
-					    
-					    for (int i = 0; i < colCount; i++) {
-					        Cell originalCell = originalRow.getCell(i);
-					        if (originalCell != null) {
-					            resultRow.createCell(i).setCellValue(originalCell.toString());
-					        }
-					    }
-
-					    // Add status and error message
-					    resultRow.createCell(colCount).setCellValue(error.getStatus());
-					    resultRow.createCell(colCount + 1).setCellValue(error.getErrorMessage());
-					}
+	//				Workbook resultWorkbook = new XSSFWorkbook();
+	//				Sheet resultSheet = resultWorkbook.createSheet("Response Excel");
+//
+//					Row row = sheet.getRow(0);
+//					Row resultHeader = resultSheet.createRow(0);
+//					int colCount = row.getLastCellNum();
+//
+//					for (int i = 0; i < colCount; i++) {
+//						resultHeader.createCell(i).setCellValue(row.getCell(i).toString());
+//					}
+//
+//					resultHeader.createCell(colCount).setCellValue("Status");
+//					resultHeader.createCell(colCount + 1).setCellValue("Error Message");
+//
+//					// Fetch all errors for this batch
+//					List<ProposersError> allErrors = errorRepo.findByBatchId(batchQueue.getQueid());
+//
+//					int rowIndex = 1;
+//					for (ProposersError error : allErrors) {
+//						int errorRowNum = error.getRowNumber();
+//						Row originalRow = sheet.getRow(errorRowNum);
+//						if (originalRow == null)
+//							continue;
+//
+//						Row resultRow = resultSheet.createRow(rowIndex++);
+//
+//						for (int i = 0; i < colCount; i++) {
+//							Cell originalCell = originalRow.getCell(i);
+//							if (originalCell != null) {
+//								resultRow.createCell(i).setCellValue(originalCell.toString());
+//							}
+//						}
+//
+//						// Add status and error message
+//						resultRow.createCell(colCount).setCellValue(error.getStatus());
+//						resultRow.createCell(colCount + 1).setCellValue(error.getErrorMessage());
+//					}
 
 					// Save result file
-					String resultPath = batchQueue.getFilePath().replace(".xlsx", "_Result.xlsx");
-					try (FileOutputStream fos = new FileOutputStream(resultPath)) {
-					    resultWorkbook.write(fos);
-					}
-					resultWorkbook.close();
+					
 				}
-
+				String resultPath = batchQueue.getFilePath();
+				try (FileOutputStream fos = new FileOutputStream(resultPath)) {
+					workbook.write(fos);
+				}
+				batchQueue.setFilePath(resultPath);
+				workbook.close();
 				batchQueueRepo.save(batchQueue);
 
 			} catch (Exception e) {
@@ -1549,7 +1568,6 @@ public class ProposerServiceImpl implements ProposerService {
 		}
 	}
 
-	
 	@Override
 	public void getDBDataToExcel(OutputStream outputStream) throws IOException {
 
