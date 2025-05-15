@@ -2,7 +2,7 @@ package com.InsuranceProposerCrud.entity;
 
 import java.util.List;
 
-public class ProposerPagination {
+public class ProposerSearchRequest {
 
 	private Integer page;
 	private Integer size;
@@ -27,7 +27,7 @@ public class ProposerPagination {
 		this.size = size;
 	}
 
-	public ProposerPagination(Integer page, Integer size, String sortBy, String sortOrder) {
+	public ProposerSearchRequest(Integer page, Integer size, String sortBy, String sortOrder) {
 		super();
 		this.page = page;
 		this.size = size;
@@ -35,7 +35,7 @@ public class ProposerPagination {
 		this.sortOrder = sortOrder;
 	}
 	
-	public ProposerPagination(Integer page, Integer size, String sortBy, String sortOrder,
+	public ProposerSearchRequest(Integer page, Integer size, String sortBy, String sortOrder,
 			List<ProposerSearchFilter> filters) {
 		super();
 		this.page = page;
@@ -45,7 +45,7 @@ public class ProposerPagination {
 		
 	}
 
-	public ProposerPagination() {
+	public ProposerSearchRequest() {
 		super();
 	}
 

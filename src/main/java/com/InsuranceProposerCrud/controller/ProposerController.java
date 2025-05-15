@@ -16,10 +16,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.InsuranceProposerCrud.dto.RequestDto;
+import com.InsuranceProposerCrud.dto.ResponseDto;
 import com.InsuranceProposerCrud.entity.Proposer;
-import com.InsuranceProposerCrud.entity.ProposerPagination;
-import com.InsuranceProposerCrud.request.RequestDto;
-import com.InsuranceProposerCrud.request.ResponseDto;
+import com.InsuranceProposerCrud.entity.ProposerSearchRequest;
 import com.InsuranceProposerCrud.response.ResponseHandler;
 import com.InsuranceProposerCrud.service.ProposerService;
 
@@ -64,7 +64,7 @@ public class ProposerController {
 
 	//all_proposer_by_criteriaBuilder
 	@PostMapping("/listing")
-	public ResponseHandler allProposerByCriteriaBuilder(@RequestBody ProposerPagination pagination) {
+	public ResponseHandler allProposerByCriteriaBuilder(@RequestBody ProposerSearchRequest pagination) {
 		ResponseHandler response = new ResponseHandler();
 
 		List<RequestDto> getAllCount = proposerService.listAllProposers();
@@ -106,7 +106,7 @@ public class ProposerController {
 
 	//all_proposer_by_stringBuilder
 	@PostMapping("/listing_by_stringBuilder")
-	public ResponseHandler allProposerByStringBuilder(@RequestBody ProposerPagination pagination) {
+	public ResponseHandler allProposerByStringBuilder(@RequestBody ProposerSearchRequest pagination) {
 		ResponseHandler response = new ResponseHandler();
 
 		try {
@@ -250,7 +250,7 @@ public class ProposerController {
 	}
 
 	@PostMapping("/fetchProposerByJoin")
-	public ResponseHandler allProposers(@RequestBody ProposerPagination pagination) {
+	public ResponseHandler allProposers(@RequestBody ProposerSearchRequest pagination) {
 		ResponseHandler response = new ResponseHandler();
 
 		try {

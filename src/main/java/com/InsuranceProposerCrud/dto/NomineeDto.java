@@ -1,8 +1,8 @@
-package com.InsuranceProposerCrud.request;
+package com.InsuranceProposerCrud.dto;
 
 import java.util.Date;
 
-import com.InsuranceProposerCrud.enumclasses.Gender;
+import com.InsuranceProposerCrud.enums.Gender;
 
 
 public class NomineeDto {

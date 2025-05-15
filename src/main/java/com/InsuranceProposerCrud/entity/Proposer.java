@@ -2,10 +2,9 @@ package com.InsuranceProposerCrud.entity;
 
 import java.util.Date;
 
-
-import com.InsuranceProposerCrud.enumclasses.Gender;
-import com.InsuranceProposerCrud.enumclasses.ProposerTitle;
-import com.InsuranceProposerCrud.request.NomineeDto;
+import com.InsuranceProposerCrud.dto.NomineeDto;
+import com.InsuranceProposerCrud.enums.Gender;
+import com.InsuranceProposerCrud.enums.ProposerTitle;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

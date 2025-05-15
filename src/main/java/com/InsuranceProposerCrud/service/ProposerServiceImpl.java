@@ -32,21 +32,21 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.InsuranceProposerCrud.dto.NomineeDto;
+import com.InsuranceProposerCrud.dto.RequestDto;
+import com.InsuranceProposerCrud.dto.ResponseDto;
 import com.InsuranceProposerCrud.entity.BatchQueue;
 import com.InsuranceProposerCrud.entity.Nominee;
 import com.InsuranceProposerCrud.entity.Proposer;
-import com.InsuranceProposerCrud.entity.ProposerPagination;
+import com.InsuranceProposerCrud.entity.ProposerSearchRequest;
 import com.InsuranceProposerCrud.entity.ProposerSearchFilter;
 import com.InsuranceProposerCrud.entity.ProposersError;
-import com.InsuranceProposerCrud.enumclasses.Gender;
-import com.InsuranceProposerCrud.enumclasses.ProposerTitle;
+import com.InsuranceProposerCrud.enums.Gender;
+import com.InsuranceProposerCrud.enums.ProposerTitle;
 import com.InsuranceProposerCrud.repository.BatchProcessingRepository;
 import com.InsuranceProposerCrud.repository.NomineeRepository;
 import com.InsuranceProposerCrud.repository.ProposerErrorRepository;
 import com.InsuranceProposerCrud.repository.ProposerRepository;
-import com.InsuranceProposerCrud.request.NomineeDto;
-import com.InsuranceProposerCrud.request.RequestDto;
-import com.InsuranceProposerCrud.request.ResponseDto;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
@@ -199,7 +199,7 @@ public class ProposerServiceImpl implements ProposerService {
 	}
 
 	@Override
-	public List<Proposer> allProposer(ProposerPagination pagination) {
+	public List<Proposer> allProposer(ProposerSearchRequest pagination) {
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
@@ -284,58 +284,58 @@ public class ProposerServiceImpl implements ProposerService {
 	@Override
 	public ResponseDto proposerFindById(Integer proposerId) {
 		Optional<Proposer> proposerOpt = proposerRepo.findById(proposerId);
-		ResponseDto dto = new ResponseDto();
+		ResponseDto responseDto = new ResponseDto();
 
 		if (proposerOpt.isPresent()) {
-			Proposer details = proposerOpt.get();
+			Proposer proposer = proposerOpt.get();
 
-			dto.setFirstName(details.getFirstName());
-			dto.setMiddleName(details.getMiddleName());
-			dto.setLastName(details.getLastName());
-			dto.setAddressLine1(details.getAddressLine1());
-			dto.setAddressLine2(details.getAddressLine2());
-			dto.setAddressLine3(details.getAddressLine3());
-			dto.setAlternateMobNo(details.getAlternateMobNo());
-			dto.setCity(details.getCity());
-			dto.setEmail(details.getEmail());
-			dto.setMobileNo(details.getMobileNo());
-			dto.setPincode(details.getPincode());
-			dto.setProposerTitle(details.getProposerTitle());
-			dto.setState(details.getState());
-			dto.setGender(details.getGender());
-			dto.setDateOfBirth(details.getDateOfBirth());
-			dto.setAadharNo(details.getAadharNo());
-			dto.setPanNumber(details.getPanNumber());
-			dto.setStatus(details.getStatus());
+			responseDto.setFirstName(proposer.getFirstName());
+			responseDto.setMiddleName(proposer.getMiddleName());
+			responseDto.setLastName(proposer.getLastName());
+			responseDto.setAddressLine1(proposer.getAddressLine1());
+			responseDto.setAddressLine2(proposer.getAddressLine2());
+			responseDto.setAddressLine3(proposer.getAddressLine3());
+			responseDto.setAlternateMobNo(proposer.getAlternateMobNo());
+			responseDto.setCity(proposer.getCity());
+			responseDto.setEmail(proposer.getEmail());
+			responseDto.setMobileNo(proposer.getMobileNo());
+			responseDto.setPincode(proposer.getPincode());
+			responseDto.setProposerTitle(proposer.getProposerTitle());
+			responseDto.setState(proposer.getState());
+			responseDto.setGender(proposer.getGender());
+			responseDto.setDateOfBirth(proposer.getDateOfBirth());
+			responseDto.setAadharNo(proposer.getAadharNo());
+			responseDto.setPanNumber(proposer.getPanNumber());
+			responseDto.setStatus(proposer.getStatus());
 
 			List<Nominee> nomineeEntity = nomineeRepo.getByProposerId(proposerId);
 			List<NomineeDto> nomineeDtoList = new ArrayList<>();
 
 			for (Nominee nomEntity : nomineeEntity) {
-				NomineeDto nomDto = new NomineeDto();
-				nomDto.setNomineeFirstName(nomEntity.getNomineeFirstName());
-				nomDto.setNomineeLastName(nomEntity.getNomineeLastName());
-				nomDto.setNomineeGender(nomEntity.getNomineeGender());
-				nomDto.setRelationWithNominee(nomEntity.getRelationWithNominee());
-				nomDto.setNomineeDOB(nomEntity.getNomineeDOB());
+				NomineeDto nomineeDto = new NomineeDto();
+				nomineeDto.setNomineeFirstName(nomEntity.getNomineeFirstName());
+				nomineeDto.setNomineeLastName(nomEntity.getNomineeLastName());
+				nomineeDto.setNomineeGender(nomEntity.getNomineeGender());
+				nomineeDto.setRelationWithNominee(nomEntity.getRelationWithNominee());
+				nomineeDto.setNomineeDOB(nomEntity.getNomineeDOB());
 				// nomDto.setNomineeId(nomEntity.getNomineeId());
-				nomDto.setIsUpdate(false);
-				nomDto.setProposerId(proposerId);
+				nomineeDto.setIsUpdate(false);
+				nomineeDto.setProposerId(proposerId);
 
-				nomineeDtoList.add(nomDto);
+				nomineeDtoList.add(nomineeDto);
 			}
 
-			dto.setNomineeDetails(nomineeDtoList);
+			responseDto.setNomineeDetails(nomineeDtoList);
 		}
 
-		return dto;
+		return responseDto;
 	}
 
 	@Override
 	public String deleteProposer(Integer proposerId) {
-		Optional<Proposer> proposerOpt = proposerRepo.findById(proposerId);
-		if (proposerOpt.isPresent()) {
-			Proposer proposer = proposerOpt.get();
+		Optional<Proposer> optional = proposerRepo.findById(proposerId);
+		if (optional.isPresent()) {
+			Proposer proposer = optional.get();
 			if ("y".equals(proposer.getStatus())) {
 				proposer.setStatus("n");
 				proposerRepo.save(proposer);
@@ -359,13 +359,13 @@ public class ProposerServiceImpl implements ProposerService {
 	@Override
 	public String updateProposer(Integer proposerId, RequestDto requestDto) {
 
-		Optional<Proposer> opt = proposerRepo.findByProposerIdAndStatus(proposerId, "y");
+		Optional<Proposer> optional = proposerRepo.findByProposerIdAndStatus(proposerId, "y");
 
-		if (!opt.isPresent()) {
+		if (!optional.isPresent()) {
 			throw new NoSuchElementException("Proposer not found with ID: " + proposerId);
 		}
 
-		Proposer existing = opt.get();
+		Proposer existing = optional.get();
 		List<String> errors = new ArrayList<>();
 
 		// Validations
@@ -506,9 +506,9 @@ public class ProposerServiceImpl implements ProposerService {
 	}
 
 	@Override
-	public List<Proposer> fetchAllProposerByStringBuilder(ProposerPagination pagination) {
+	public List<Proposer> fetchAllProposerByStringBuilder(ProposerSearchRequest pagination) {
 
-		StringBuilder sb = new StringBuilder("SELECT p FROM Proposer p WHERE p.status='y'");
+		StringBuilder stringBuilder = new StringBuilder("SELECT p FROM Proposer p WHERE p.status='y'");
 
 		Map<String, Object> params = new HashMap<>();
 
@@ -516,27 +516,27 @@ public class ProposerServiceImpl implements ProposerService {
 
 		// Add dynamic filters
 		if (filter.getFirstName() != null && !filter.getFirstName().isEmpty()) {
-			sb.append(" AND LOWER(p.firstName) LIKE :firstName");
+			stringBuilder.append(" AND LOWER(p.firstName) LIKE :firstName");
 			params.put("firstName", "%" + filter.getFirstName().toLowerCase() + "%");
 		}
 
 		if (filter.getLastName() != null && !filter.getLastName().isEmpty()) {
-			sb.append(" AND LOWER(p.lastName) LIKE :lastName");
+			stringBuilder.append(" AND LOWER(p.lastName) LIKE :lastName");
 			params.put("lastName", "%" + filter.getLastName().toLowerCase() + "%");
 		}
 
 		if (filter.getEmail() != null && !filter.getEmail().isEmpty()) {
-			sb.append("AND LOWER(p.email) LIKE :email");
+			stringBuilder.append("AND LOWER(p.email) LIKE :email");
 			params.put("email", "%" + filter.getEmail().toLowerCase() + "%");
 		}
 
 		if (filter.getMobileNo() != null) {
-			sb.append("AND LOWER(p.mobileNo) LIKE :mobileNo");
+			stringBuilder.append("AND LOWER(p.mobileNo) LIKE :mobileNo");
 			params.put("mobileNo", "%" + filter.getMobileNo() + "%");
 		}
 
 		if (filter.getStatus() != null && !filter.getStatus().isEmpty()) {
-			sb.append("AND LOWER(sb.status) LIKE :status");
+			stringBuilder.append("AND LOWER(sb.status) LIKE :status");
 			params.put("status", "%" + filter.getStatus().toLowerCase() + "%");
 		}
 
@@ -555,9 +555,9 @@ public class ProposerServiceImpl implements ProposerService {
 			sortOrder = "desc";
 		}
 
-		sb.append(" ORDER BY p.").append(sortBy).append(" ").append(sortOrder); // ORDER BY p.proposerId desc
+		stringBuilder.append(" ORDER BY p.").append(sortBy).append(" ").append(sortOrder); // ORDER BY p.proposerId desc
 
-		TypedQuery<Proposer> query = entityManager.createQuery(sb.toString(), Proposer.class);
+		TypedQuery<Proposer> query = entityManager.createQuery(stringBuilder.toString(), Proposer.class);
 
 		for (Map.Entry<String, Object> entry : params.entrySet()) {
 			query.setParameter(entry.getKey(), entry.getValue());
@@ -577,7 +577,7 @@ public class ProposerServiceImpl implements ProposerService {
 	}
 
 	@Override
-	public List<Proposer> fetchAllProposersWithNomineesByJoin(ProposerPagination pagination) {
+	public List<Proposer> fetchAllProposersWithNomineesByJoin(ProposerSearchRequest pagination) {
 		// Create CriteriaBuilder and CriteriaQuery
 		CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
 		CriteriaQuery<Proposer> criteriaQuery = criteriaBuilder.createQuery(Proposer.class);
@@ -692,10 +692,12 @@ public class ProposerServiceImpl implements ProposerService {
 		Workbook workbook = new XSSFWorkbook(file.getInputStream());
 		Sheet sheet = workbook.getSheetAt(0);
 
-		Row newrow = sheet.getRow(0);
-		int lastcol = newrow.getLastCellNum();
-		newrow.createCell(lastcol).setCellValue("Status");
-		newrow.createCell(lastcol + 1).setCellValue("Error Message");
+		Row newRow = sheet.getRow(0);
+		
+		int lastColumn = newRow.getLastCellNum();
+		
+		newRow.createCell(lastColumn).setCellValue("Status");
+		newRow.createCell(lastColumn + 1).setCellValue("Error Message");
 
 		List<String> responseErrors = new ArrayList<>();
 		List<ProposersError> currentFileErrors = new ArrayList<>();
@@ -859,8 +861,8 @@ public class ProposerServiceImpl implements ProposerService {
 				fieldNames.add("State");
 			}
 
-			Cell errorstatus = row.createCell(lastcol); // Status
-			Cell errorMessage = row.createCell(lastcol + 1); // Error
+			Cell errorstatus = row.createCell(lastColumn); // Status
+			Cell errorMessage = row.createCell(lastColumn + 1); // Error
 
 			if (!errorFields.isEmpty()) {
 				for (int j = 0; j < errorFields.size(); j++) {
@@ -1276,14 +1278,14 @@ public class ProposerServiceImpl implements ProposerService {
 				int totalRows = batchQueue.getRowCount();
 				int batchSize = 3;
 				
-				Row headRow = sheet.getRow(0);
+				Row headerRow = sheet.getRow(0);
 				
 				if (rowStart == 1) {
-					int lastCol = headRow.getLastCellNum();
+					int lastCol = headerRow.getLastCellNum();
 
-					headRow.createCell(lastCol).setCellValue("Error Message");
+					headerRow.createCell(lastCol).setCellValue("Error Message");
 
-					headRow.createCell(lastCol + 1).setCellValue("Error Status");
+					headerRow.createCell(lastCol + 1).setCellValue("Error Status");
 				}
 
 				List<ProposersError> currentFileErrors = new ArrayList<>();
@@ -1401,8 +1403,8 @@ public class ProposerServiceImpl implements ProposerService {
 						}
 					}
 
-					Cell altMobile = row.getCell(12);
-					if (altMobile == null || altMobile.getNumericCellValue() == 0) {
+					Cell alternateMobile = row.getCell(12);
+					if (alternateMobile == null || alternateMobile.getNumericCellValue() == 0) {
 						errorFields.add("Alternate Mobile Number is missing");
 						fieldNames.add("Alternate Mobile Number");
 					}
@@ -1458,8 +1460,8 @@ public class ProposerServiceImpl implements ProposerService {
 							currentFileErrors.add(error);
 							errorRepo.save(error);
 						}
-						Cell errorMessage = row.createCell(headRow.getLastCellNum()-2);
-						Cell errorstatus = row.createCell(headRow.getLastCellNum() - 1);
+						Cell errorMessage = row.createCell(headerRow.getLastCellNum()-2);
+						Cell errorstatus = row.createCell(headerRow.getLastCellNum() - 1);
 
 						errorMessage.setCellValue(String.join(", ", errorFields));
 						errorstatus.setCellValue("failed");
@@ -1478,7 +1480,7 @@ public class ProposerServiceImpl implements ProposerService {
 						proposer.setStatus(status.getStringCellValue().trim());
 						proposer.setEmail(email.getStringCellValue().trim());
 						proposer.setMobileNo((long) mobileNumber.getNumericCellValue());
-						proposer.setAlternateMobNo((long) altMobile.getNumericCellValue());
+						proposer.setAlternateMobNo((long) alternateMobile.getNumericCellValue());
 						proposer.setAddressLine1(address1.getStringCellValue().trim());
 						proposer.setAddressLine2(address2.getStringCellValue().trim());
 						proposer.setAddressLine3(address3.getStringCellValue().trim());
@@ -1498,8 +1500,8 @@ public class ProposerServiceImpl implements ProposerService {
 						currentFileErrors.add(success);
 						errorRepo.save(success);
 						
-						Cell errorMessage = row.createCell(headRow.getLastCellNum()-2);
-						Cell errorstatus = row.createCell(headRow.getLastCellNum() - 1);
+						Cell errorMessage = row.createCell(headerRow.getLastCellNum()-2);
+						Cell errorstatus = row.createCell(headerRow.getLastCellNum() - 1);
 
 						errorMessage.setCellValue(saved.getProposerId().toString());
 						errorstatus.setCellValue("success");

@@ -1,10 +1,10 @@
-package com.InsuranceProposerCrud.request;
+package com.InsuranceProposerCrud.dto;
 
 import java.util.Date;
 import java.util.List;
 
-import com.InsuranceProposerCrud.enumclasses.Gender;
-import com.InsuranceProposerCrud.enumclasses.ProposerTitle;
+import com.InsuranceProposerCrud.enums.Gender;
+import com.InsuranceProposerCrud.enums.ProposerTitle;
 
 public class RequestDto {
 

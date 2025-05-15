@@ -27,6 +27,7 @@ public class BatchQueue {
 	private String status;
 	@Column(name="last_process_count")
 	private Integer lastProcessCount;
+	
 	public Integer getQueid() {
 		return queid;
 	}
