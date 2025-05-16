@@ -144,7 +144,9 @@ public class ProposerController {
 		ResponseHandler response = new ResponseHandler();
 		try {
 			List<RequestDto> reqDto = proposerService.listAllProposers();
-
+			if(reqDto.isEmpty()) {
+		        throw new RuntimeException("No proposers found");
+		    }
 			response.setData(reqDto);
 			response.setStatus(true);
 			response.setMessage("Success");

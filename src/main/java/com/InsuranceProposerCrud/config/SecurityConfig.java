@@ -11,11 +11,11 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.InsuranceProposerCrud.JWT.JwtRequestFilter;
+import com.InsuranceProposerCrud.JWT.MyUserDetailsService;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -32,6 +32,8 @@ public class SecurityConfig {
 		this.userJWTServiceImpl = userJWTServiceImpl;
 		this.jwtRequestFilter = jwtRequestFilter;
 	}
+	
+	
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -69,4 +71,6 @@ public class SecurityConfig {
 	public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
 		return config.getAuthenticationManager();
 	}
+	
+	 
 }

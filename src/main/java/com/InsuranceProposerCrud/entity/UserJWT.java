@@ -21,6 +21,31 @@ public class UserJWT {
 	private String password;
 	
 	
+	@Column(name="email")
+	private String email;
+	@Column(name="fullName")
+    private String fullName;
+	@Column(name="address")
+    private String address;
+	
+	public String getEmail() {
+		return email;
+	}
+	public void setEmail(String email) {
+		this.email = email;
+	}
+	public String getFullName() {
+		return fullName;
+	}
+	public void setFullName(String fullName) {
+		this.fullName = fullName;
+	}
+	public String getAddress() {
+		return address;
+	}
+	public void setAddress(String address) {
+		this.address = address;
+	}
 	public Integer getUserId() {
 		return userId;
 	}

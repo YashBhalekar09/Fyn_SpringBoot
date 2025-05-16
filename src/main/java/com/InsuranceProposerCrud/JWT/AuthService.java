@@ -1,33 +1,49 @@
 package com.InsuranceProposerCrud.JWT;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import com.InsuranceProposerCrud.entity.UserJWT;
+import com.InsuranceProposerCrud.repository.UserJWTRepository;
+
 
 @Service
 public class AuthService {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+	@Autowired
+	private AuthenticationManager authenticationManager;
 
-    @Autowired
-    private MyUserDetailsService userDetailsService;
+	@Autowired
+	private MyUserDetailsService userDetailsService;
 
-    @Autowired
-    private JWTUtils jwtUtils;
+	@Autowired
+	private JWTUtils jwtUtils;
 
-    public String loginAndGenerateToken(String username, String password) {
-        
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(username, password));
+	@Autowired
+	private UserJWTRepository userJwtRepo;
 
-       
-        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+	public String loginAndGenerateToken(String username, String password) {
 
-        
-        return jwtUtils.generateToken(userDetails);
-    }
+		authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
+
+		UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+		UserJWT user = userJwtRepo.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
+
+		// Prepare custom claims
+		Map<String, Object> extraClaims = new HashMap<>();
+		extraClaims.put("email", user.getEmail());
+		extraClaims.put("fullName", user.getFullName());
+		extraClaims.put("address", user.getAddress());
+		// Generate JWT token with custom claims
+		return jwtUtils.generateToken(extraClaims, userDetails);
+
+	}
 }
-

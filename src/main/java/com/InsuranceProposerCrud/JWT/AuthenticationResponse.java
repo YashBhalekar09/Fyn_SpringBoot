@@ -1,14 +1,17 @@
 package com.InsuranceProposerCrud.JWT;
 
 public class AuthenticationResponse {
-	private final String jwt;
+	
+	private final String jwtToken;
 
-	public String getJwt() {
-		return jwt;
+	public String getJwtToken() {
+		return jwtToken;
 	}
 
-	public AuthenticationResponse(String jwt) {
+	public AuthenticationResponse(String jwtToken) {
 		super();
-		this.jwt = jwt;
+		this.jwtToken = jwtToken;
 	}
+
+	
 }
